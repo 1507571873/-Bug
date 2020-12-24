@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.shield.mapper.EmployeeMapper">
+
+    <insert id="saveEmployeeData" parameterType="com.shield.model.Personnel">
+        insert into t_sys_personnel
+        (politicsStatus,maritalStatus,nation,religion,position,pay,entryDate,dimissionDate
+         ,isJob,hobby,officePhone,userId,operatorId,createDate,remarks,updateDate)
+         values
+        (#{politicsStatus},#{maritalStatus},#{nation},#{religion},#{position},#{pay},#{entryDate},#{dimissionDate}
+        ,#{isJob},#{hobby},#{officePhone},#{userId},#{operatorId},sysdate(),#{remarks},sysdate())
+    </insert>
+
+    <select id="queryMz" resultType="map">
+        select mz_id code,mzname codeName from tp_mz
+    </select>
+
+    <delete id="deleteEmployeeData" parameterType="integer">
+        delete from t_sys_personnel where id=#{id}
+    </delete>
+
+    <select id="queryEmployeeById" parameterType="integer" resultType="com.shield.model.Personnel">
+        select id,politicsStatus,maritalStatus,nation,religion,position,pay,entryDate,dimissionDate,isJob,hobby,
+        officePhone,userId,operatorId,createDate,remarks,updateDate from t_sys_personnel where userId =#{userId}
+    </select>
+</mapper>

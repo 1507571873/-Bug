@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.shield.mapper.PunchcardMapper">
+    <select id="isChcarTime" parameterType="integer" resultType="long">
+        select count(id)
+        from t_kq_punchcard
+        where userId = #{userId}
+          and DATE_FORMAT(SYSDATE(), '%Y-%m-%d') = DATE_FORMAT(clockInTime, '%Y-%m-%d')
+    </select>
+
+    <insert id="addPunchcard" parameterType="com.shield.model.Punchcard">
+        insert into t_kq_punchcard (userId, realName, deptId, clockInTime, clockStatus, createTime, updateTime)
+        values (#{userId}, #{realName}, #{deptId}, #{clockInTime}, #{clockStatus}, sysdate(), sysdate())
+    </insert>
+</mapper>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.shield.mapper.EduXperiencesMapper">
+
+    <select id="queryEduXperData" parameterType="integer" resultType="com.shield.model.EduXperience">
+        select *
+        from t_rs_eduxperience
+        where userId = #{userId}
+    </select>
+
+    <insert id="addEduXper" parameterType="com.shield.model.EduXperience">
+        insert into t_rs_eduxperience
+        (userId, operatorId, createTime, updateTime, education, graduate, eduXperiences, startDate, endDate)
+        values (#{userId}, #{operatorId}, sysdate(), sysdate(), #{education}, #{graduate}, #{eduXperiences},
+                #{startDate}, #{endDate})
+    </insert>
+
+    <delete id="deleteEduXper" parameterType="integer">
+        delete
+        from t_rs_eduxperience
+        where id = #{id}
+    </delete>
+
+    <select id="queryEduXperById" parameterType="integer" resultType="com.shield.model.EduXperience">
+        select *
+        from t_rs_eduxperience
+        where id = #{id}
+    </select>
+
+    <update id="updateEduXper" parameterType="com.shield.model.EduXperience">
+        update t_rs_eduxperience
+        set updateTime=sysdate(),
+            education=#{education},
+            graduate=#{graduate},
+            eduXperiences=#{eduXperiences},
+            startDate=#{startDate},
+            endDate=#{endDate}
+        where id = #{id}
+    </update>
+</mapper>

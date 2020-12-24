@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>神盾局情报管理</title>
+    <script src="../../../commons/jquery/jquery-3.2.1.js"></script>
+    <script src="../../../commons/layui/layui.js"></script>
+    <link rel="stylesheet" href="../../../commons/layui/css/layui.css">
+    <script src="../../../commons/zTree-zTree_v3-master/js/jquery.ztree.all.js"></script>
+    <link rel="stylesheet" href="../../../commons/zTree-zTree_v3-master/css/metroStyle/metroStyle.css">
+    <script src="../../../commons/selectTree/plugin/js/selectTree.js"></script>
+    <link rel="stylesheet" href="../../../commons/selectTree/plugin/css/index.css">
+<!--
+<dd><a href="javascript:;"></a></dd>
+                    <dd><a href="javascript:;" onclick="userAdmin('/JumpController/toPermission.do')">权限管理</a></dd>
+                    <dd><a href="javascript:;" onclick="userAdmin('/JumpController/toUserRole.do')">用户角色管理</a></dd>
+                    <dd><a href="javascript:;" onclick="userAdmin('/JumpController/toRolePermission.do')">角色权限管理</a>
+                    </dd>
+                    <dd><a href="javascript:;"></a></dd>
+                    <dd><a href="javascript:;"></a></dd>
+
+            <li class="layui-nav-item"><a href="javascript:;">人事管理</a></li>
+            <li class="layui-nav-item"><a href="javascript:;">卧底管理</a></li>
+            <li class="layui-nav-item"><a href="javascript:;">间谍</a></li>
+-->
+<body class="layui-layout-body" background="/commons/rog.jpg">
+
+<div class="layui-layout layui-layout-admin">
+    <div class="layui-header">
+        <div class="layui-logo"><a href="/JumpController/loginover.do"><h1><font color="#8a2be2">神盾局</font></h1></a>
+        </div>
+        <!-- 头部区域（可配合layui已有的水平导航） -->
+        <ul class="layui-nav layui-layout-left" id="menuList">
+
+
+        </ul>
+        <ul class="layui-nav layui-layout-right">
+            <li class="layui-nav-item">
+                <a href="javascript:;"></a>
+                <img src="../../../commons/timgasd.jpg" class="layui-nav-img">
+                尼克·弗瑞
+                <dl class="layui-nav-child">
+                    <dd><a href="">基本资料</a></dd>
+                    <dd><a href="">安全设置</a></dd>
+                </dl>
+            </li>
+            <li class="layui-nav-item"><a href="">退了</a></li>
+        </ul>
+    </div>
+
+    <div class="layui-body" id="showHtml">
+
+
+        <div class="layui-footer">
+            <!-- 底部固定区域 -->
+            © layui.com - 底部固定区域
+        </div>
+    </div>
+</div>
+<script>
+    $(function () {
+        $.ajaxSetup({
+            complete: function (XMLHttpRequest) {
+                if (XMLHttpRequest.responseText == "sessionTimeout") {
+                    top.location.href = "/noSession.html"
+                    //top.alert("由于你长时间没有操作,导致Session失效!请你重新登录!",top.location.href= "/login.html");
+                }else if (XMLHttpRequest.responseText == "noRight"){
+                    top.location.href = "/noRight.html"
+                }
+            }
+        })
+    })
+    //JavaScript代码区域
+    layui.use('element', function () {
+        var element = layui.element;
+        $.ajax({
+            url:"/MenuController/menuList.do",
+            type:"post",
+            dataType:"json ",
+            success:function(result){
+                if(result.code == 200){
+                    initNav(result.data);
+                }
+            }
+        })
+
+        function initNav(data){
+            var childrenData=data;
+            var navHtml="";
+            for (var i = 0 ; i < childrenData.length; i++){
+                navHtml+='<li class="layui-nav-item">';
+                navHtml+='<a href="javascript:;">'+childrenData[i].pname+'</a>';
+                var nextChildrenData=childrenData[i].children;
+                if (nextChildrenData.length>0){
+                navHtml+='<dl class="layui-nav-child">';
+                    for(var j = 0 ; j <nextChildrenData.length;j++){
+                        navHtml+='<dd><a href="javascript:;" onclick="userAdmin(\''+nextChildrenData[j].purl+'\')">'+nextChildrenData[j].pname+'</a></dd>';
+                    }
+                }
+                navHtml+='</dl>';
+                navHtml+='</li>';
+            }
+            $("#menuList").html(navHtml);
+            element.render();
+        }
+
+        window.userAdmin = function (url) {
+            $("#showHtml").load(url);
+        }
+
+
+    });
+
+
+</script>
+
+</body>
+</html>

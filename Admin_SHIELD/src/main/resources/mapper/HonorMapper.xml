@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC  
+    "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+   
+<mapper namespace="com.shield.mapper.HonorMapper">
+
+    <insert id="addHonor" parameterType="com.shield.model.Honor">
+        insert into t_rs_honor (userId,operatorId,createDate,updateDate,honorData,honorTitle)
+        values
+        (#{userId},#{operatorId},sysdate(),sysdate(),#{honorData},#{honorTitle})
+    </insert>
+
+    <select id="queryHonorDataByUserId" parameterType="integer" resultType="com.shield.model.Honor">
+        select * from t_rs_honor where userId=#{userId}
+    </select>
+
+    <select id="queryHonorById" parameterType="integer" resultType="com.shield.model.Honor">
+        select * from t_rs_honor where id=#{id}
+    </select>
+
+    <update id="updateHonor" parameterType="com.shield.model.Honor">
+        update t_rs_honor set honorData=#{honorData},honorTitle=#{honorTitle} where id=#{id}
+    </update>
+
+    <delete id="deleteHonorById" parameterType="integer">
+        delete from t_rs_honor where id=#{id}
+    </delete>
+</mapper>

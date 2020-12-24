@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>我的请假</title>
+
+</head>
+<body>
+<div class="layui-container" style="padding: 15px;">
+
+    <div class="layui-col-md12">
+        <blockquote class="layui-elem-quote">我的请假</blockquote>
+        <div class="layui-inline" style="width: 100%" >
+            <table id="leaveTable" lay-filter="leaveTable"></table>
+        </div>
+    </div>
+
+</div>
+<div id="EduHtml">
+
+</div>
+<script>
+    layui.use(["form", "table", "laydate"], function () {
+        var form = layui.form;
+        var table = layui.table;
+        var laydate = layui.laydate;
+        //用户列表
+        var leaveTableData = table.render({
+            elem: '#leaveTable'
+            , url: '/LeaveController/queryLeavePage.do'
+            , height: 'full-200'
+            , toolbar: "#leaveToolbar"
+            , cols: [
+                [
+                    {field: 'id', title: '选择', fixed: 'left', type: 'checkbox', align: "center"}
+                    , {field: 'deptName', fixed: 'left', align: "center", title: '部门'}
+                    , {field: 'realName', fixed: 'left', align: "center", title: '姓名'}
+
+                    , {
+                    field: 'type', align: "center", title: '请假类型', templet: function (d) {
+                        if (d.type != null) {
+                            return d.type == 1 ? "因公" : "因私";
+                        } else {
+                            return "未知";
+                        }
+                    }
+                }
+                    , {
+                    field: 'startTime', align: "center", title: '开始时间'
+                    , templet: '<div>{{layui.util.toDateString(d.startTime, "yyyy-MM-dd HH:mm:ss") }}</div>'
+                } , {
+                    field: 'endTime', align: "center", title: '结束时间'
+                    , templet: '<div>{{layui.util.toDateString(d.endTime, "yyyy-MM-dd HH:mm:ss") }}</div>'
+                }
+                    , {field: 'leaveDays', align: "center", title: '请假天数'}
+                    , {field: 'auditStatus', align: "center", title: '审核状态', templet: function (d) {
+                        if (d.auditStatus == 500) {
+                            return "请假不通过";
+                        } else if(d.auditStatus == 400){
+                            return "请假通过";
+                        }else{
+                            return "审批中";
+                        }
+
+                    }
+            }, {fixed: 'right', title: '操作', toolbar: '#userTableLine', width: 150}
+                ]
+            ]
+            , page: {
+                layout: ['limit', 'count', 'prev', 'page', 'next', 'skip'] //自定义分页布局
+                , limit: 5
+                , limits: [5, 10, 15, 20]
+                , theme: '#37d5ff'
+            }
+        });
+
+        //头工具栏事件
+        table.on('toolbar(leaveTable)', function (obj) {
+            switch (obj.event) {
+                case 'addLeave':
+                    addLeave();
+                    break;
+
+            }
+        })
+        //监听行工具事件
+        table.on('tool(leaveTable)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'startAudit') {
+                startAudit(data.id);
+            }
+        });
+
+        //审核进度
+        function startAudit(){
+            layer.open({
+                title: "开始请假",
+                type: 1,
+                area: ['60%', '60%'],
+                content: $("#honorHtml").html(),
+                success: function () {
+                    appendHtml(data);
+
+                }
+            })
+        }
+
+        //拼接
+        function appendHtml(data) {
+            var htmls = "";
+            for (var i = 0; i < data.length; i++) {
+                htmls += '<ul class="layui-timeline" id="timeLine">'
+                htmls += '<li class="layui-timeline-item">'
+                htmls += '<i class="layui-icon layui-timeline-axis"></i>'
+                htmls += '<div class="layui-timeline-content layui-text">'
+                htmls += '<div class="layui-timeline-title" id=' + data[i].id + '>'
+                htmls += '<button type="button" class="layui-btn" onclick="deleteEduXper(' + data[i].id + ')">删除</button>' + '<button type="button" class="layui-btn" onclick="updateEduXper(' + data[i].id + ')">修改</button></br>';
+                htmls += "教育经历：" + data[i].auditType + "</br>"
+                htmls += '</div>'
+                htmls += '</div>'
+                htmls += '</li>'
+                htmls += '</ul>'
+            }
+            $("#EduHtml").html(htmls);
+        }
+    })
+        //请假
+        function addLeave(){
+            layer.open({
+                title: "开始请假",
+                type: 1,
+                area: ['60%', '60%'],
+                content: $("#addLeaveHtml").html(),
+                success: function () {
+                    var startDate=laydate.render({
+                        elem:"#startTime",
+                        type:"date",
+                        done:function (value,date) {
+                            endDate.config.min={
+                                year: date.year,
+                                month: date.month - 1,
+                                date: date.date
+                            }
+                        }
+                    })
+                    var endDate=laydate.render({
+                        elem:"#endTime",
+                        type:"date",
+                        done:function (value,date) {
+                            startDate.config.max={
+                                year: date.year,
+                                month: date.month - 1,
+                                date: date.date
+                            }
+                        }
+                    })
+                    form.render();
+                },
+                btn: ['保存', '取消'],
+                yes: function (index, layero) {
+                    $.ajax({
+                        url: "/LeaveController/addLeave.do",
+                        type: "post",
+                        dataType: "json",
+                        data:$("#addLeaveForm").serialize(),
+                        success: function (result) {
+                            if(result.code== 200){
+                                layer.alert("请假提交成功");
+                                leaveTableData.reload();
+                                layer.close(index);
+                            }
+                        }
+                    })
+
+                }
+
+            })
+        }
+    })
+
+</script>
+<!--行内监听-->
+<script type="text/html" id="userTableLine">
+    <a class="layui-btn layui-btn-xs" lay-event="startAudit">审核进度</a>
+</script>
+<script type="text/html" id="addLeaveHtml">
+    <form class="layui-form layui-form-pane" id="addLeaveForm">
+        <div class="layui-form-item">
+            <label class="layui-form-label">离开日期</label>
+            <div class="layui-input-inline">
+                <input type="text" name="startTime" class="layui-input" id="startTime" placeholder="yyyy-MM-dd"
+                       lay-verify="date" autocomplete="off">
+            </div>
+            <div class="layui-input-inline">
+                <input type="radio" name="startType" value="1" title="上半天" checked="">
+                <input type="radio" name="startType" value="2" title="下半天">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">返回日期</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="endTime" class="layui-input" id="endTime" placeholder="yyyy-MM-dd"
+                           lay-verify="date" autocomplete="off">
+                </div>
+                <div class="layui-input-inline">
+                    <input type="radio" name="endType" value="1" title="上半天" checked="">
+                    <input type="radio" name="endType" value="2" title="下半天">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item" pane="">
+            <label class="layui-form-label">请假事由</label>
+            <div class="layui-input-block">
+                <input type="radio" name="type" value="1" title="因公" checked="">
+                <input type="radio" name="type" value="2" title="因私">
+            </div>
+        </div>
+        <div>
+            <label class="layui-form-label">请假说明</label>
+            <div class="layui-input-block">
+                <textarea name="remark" id="remark"  placeholder="请输入请假说明" class="layui-textarea"></textarea>
+            </div>
+        </div>
+    </form>
+</script>
+<script id="leaveToolbar" type="text/html">
+    <button class="layui-btn layui-btn-sm" lay-event="addLeave">开始请假</button>
+</script>
+</body>
+</html>

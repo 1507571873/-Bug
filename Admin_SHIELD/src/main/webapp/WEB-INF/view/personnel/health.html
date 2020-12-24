@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<form class="layui-form" id="healthHtml">
+    <input type="hidden" name="id" id="id">
+    <input type="hidden" name="userId" id="userId">
+    <input type="hidden" name="operatorId" id="operatorId">
+    <div class="layui-form-item">
+    <div class="layui-inline">
+        <label class="layui-form-label">用户名</label>
+        <div class="layui-input-block">
+            <input type="text"  id="realName" readonly lay-verify="title" autocomplete="off" placeholder="请输入标题" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-inline">
+        <label class="layui-form-label">体检时间</label>
+        <div class="layui-input-block">
+            <input type="text" name="examineTime" id="examineTime" lay-verify="required" lay-reqtext="用户名是必填项，岂能为空？" placeholder="请输入" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    </div>
+    <div class="layui-form-item">
+    <div class="layui-inline">
+        <label class="layui-form-label">身高</label>
+        <div class="layui-input-block">
+            <input type="text" name="staure" id="staure" lay-verify="required" lay-reqtext="用户名是必填项，岂能为空？" placeholder="请输入" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-inline">
+        <label class="layui-form-label">体重</label>
+        <div class="layui-input-block">
+            <input type="text" name="weight"  id="weight" lay-verify="required" lay-reqtext="用户名是必填项，岂能为空？" placeholder="请输入" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">健康状态</label>
+        <div class="layui-input-block">
+            <input type="radio" name="healthStatus" value="1" title="健康" checked="">
+            <input type="radio" name="healthStatus" value="2" title="亚健康">
+            <input type="radio" name="healthStatus" value="3" title="残疾">
+            <input type="radio" name="healthStatus" value="4" title="瘫痪">
+            <input type="radio" name="healthStatus" value="0" title="禁用" disabled="">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">是否有心脑血管疾病</label>
+        <div class="layui-input-block">
+            <input type="radio" name="isCCVD" value="1" title="是" >
+            <input type="radio" name="isCCVD" value="2" title="否" checked="">
+            <input type="radio" name="isCCVD" value="0" title="禁用" disabled="">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">是否有遗传疾病</label>
+        <div class="layui-input-block">
+            <input type="radio" name="isGeneticDisease" value="1" title="是" >
+            <input type="radio" name="isGeneticDisease" value="2" title="否" checked="">
+            <input type="radio" name="isGeneticDisease" value="0" title="禁用" disabled="">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">是否有传染病</label>
+        <div class="layui-input-block">
+            <input type="radio" name="isContagion" value="1" title="是" >
+            <input type="radio" name="isContagion" value="2" title="否" checked="">
+            <input type="radio" name="isContagion" value="0" title="禁用" disabled="">
+        </div>
+    </div>
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">病例史</label>
+        <div class="layui-input-block">
+            <textarea placeholder="请输入内容" id="medicalHistory" name="medicalHistory" class="layui-textarea"></textarea>
+        </div>
+    </div>
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">病情描述</label>
+        <div class="layui-input-block">
+            <textarea placeholder="请输入内容"  id="diseaseDescription" name="diseaseDescription" class="layui-textarea"></textarea>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button type="button" class="layui-btn"  onclick="saveHealth()">立即提交</button>
+            <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+        </div>
+    </div>
+</form>
+
+<div id="test7"></div>
+<div><div id="test8"></div></div>
+<script>
+    layui.use(['form','laydate'], function() {
+        var form = layui.form;
+        var laydate = layui.laydate;
+        form.render();
+        laydate.render({//渲染日期
+            elem: "#examineTime",
+            type: "date",
+            format: "yyyy-MM-dd HH:mm:ss"
+        })
+        var OrganTreeObj=$.fn.zTree.getZTreeObj("organTree");
+        var sNodes = OrganTreeObj.getSelectedNodes();
+        var userId= sNodes[0].id.split("_")[1];//获取用户Id
+        var userName=sNodes[0].name;//用户名称
+        $("#userId").val(userId);
+        $("#operatorId").val(userId);
+        $("#realName").val(userName);
+        $.post({
+            data:{"userId":userId},
+            dataType:"json",
+            url:"/HealthController/queryHealthData.do",
+            success:function(result){
+                $("#id").val(result.data.id);
+                $("#examineTime").val(result.data.examineTime);
+                $("#staure").val(result.data.staure);
+                $("#weight").val(result.data.weight);
+                $("[name='healthStatus'][value='" + result.data.healthStatus + "']").prop("checked", true);
+                $("[name='isCCVD'][value='" + result.data.isCCVD + "']").prop("checked", true);
+                $("[name='isGeneticDisease'][value='" + result.data.isGeneticDisease + "']").prop("checked", true);
+                $("[name='isContagion'][value='" + result.data.isContagion + "']").prop("checked", true);
+                $("#medicalHistory").val(result.data.medicalHistory);
+                $("#diseaseDescription").val(result.data.diseaseDescription);
+                form.render();
+            }
+        })
+    })
+    function saveHealth(){
+        $.post({
+            data:$("#healthHtml").serialize(),
+            dataType:"json",
+            url:"/HealthController/saveHealthData.do",
+            success:function(result){
+                if (result.code==200){
+                    fileOnclick('/JumpController/toHealth.do','健康检查');
+                    layer.msg(result.msg);
+                }
+            }
+
+        })
+    }
+</script>
+</body>
+</html>

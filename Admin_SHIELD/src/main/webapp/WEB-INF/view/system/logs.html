@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div class="layui-col-md2">
+    <div class="layui-card">
+        <div class="layui-card-header">
+            导航
+        </div>
+        <div class="layui-card-body">
+            <ul class="layui-nav layui-nav-tree layui-bg-cyan layui-inline" lay-filter="demo">
+                <li class="layui-nav-item layui-nav-itemed"><a href="javascript:;" onclick="fileOnclick('/JumpController/toShowLogs.do','日志展示')">日志展示</a></li>
+                <li class="layui-nav-item layui-nav-itemed"><a href="javascript:;" onclick="fileOnclick('/JumpController/toRushB.do','性能统计')">性能统计</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="layui-col-md10">
+    <div class="layui-card">
+        <div class="layui-card-header" id="title"></div>
+        <div class="layui-card-body" id="empInfo">
+
+        </div>
+    </div>
+</div>
+</div>
+<script>
+    layui.use("form",function () {
+        var form = layui.form;
+        window.fileOnclick = function (url, title) {
+            $("#title").html(title);
+            $("#empInfo").load(url);
+        }
+    })
+</script>
+
+
+</body>
+
+</html>

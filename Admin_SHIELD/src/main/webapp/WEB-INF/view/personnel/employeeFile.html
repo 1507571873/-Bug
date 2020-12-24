@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<div class="layui-row layui-col-space20">
+    <div class="layui-col-md2">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                组织机构
+            </div>
+            <div class="layui-card-body">
+                <div class="ztree" id="organTree"></div>
+            </div>
+        </div>
+    </div>
+    <div class="layui-col-md2">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                导航
+            </div>
+            <div class="layui-card-body">
+                <ul class="layui-nav layui-nav-tree layui-bg-cyan layui-inline" lay-filter="demo">
+                    <li class="layui-nav-item layui-nav-itemed"><a href="javascript:;" onclick="fileOnclick('/JumpController/toEmpInfo.do','基本信息')">基本信息</a></li>
+                    <li class="layui-nav-item layui-nav-itemed"><a href="javascript:;" onclick="fileOnclick('/JumpController/toWorkExperience.do','工作经历')">工作经历</a></li>
+                    <li class="layui-nav-item layui-nav-itemed"><a href="javascript:;" onclick="fileOnclick('/JumpController/toEduXperiences.do','教育经历')">教育经历</a></li>
+                    <li class="layui-nav-item layui-nav-itemed"><a href="javascript:;" onclick="fileOnclick('/JumpController/toHonor.do','个人荣誉')">个人荣誉</a></li>
+                    <li class="layui-nav-item layui-nav-itemed"><a href="javascript:;">专业技能</a></li>
+                    <li class="layui-nav-item layui-nav-itemed"><a href="javascript:;">家庭成员</a></li>
+                    <li class="layui-nav-item layui-nav-itemed"><a href="javascript:;" onclick="fileOnclick('/JumpController/toContactAddress.do','通讯地址')">通讯地址</a></li>
+                    <li class="layui-nav-item layui-nav-itemed"><a href="javascript:;" onclick="fileOnclick('/JumpController/toHealth.do','健康检查')">健康检查</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="layui-col-md8">
+        <div class="layui-card">
+            <div class="layui-card-header" id="title"></div>
+            <div class="layui-card-body" id="empInfo">
+
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    layui.use("form",function () {
+        var form=layui.form;
+
+        var organSetting={
+            view: {
+                selectedMulti: false
+            }
+        }
+        $.ajax({
+            url: "/OrganController/queryOrganTree.do",
+            dataType:"json",
+            type:"get",
+            async:false,
+            success:function (result) {
+                $.fn.zTree.init($("#organTree"), organSetting, result).expandAll(true);
+            }
+        })
+
+        window.fileOnclick=function(url,title){
+            var OrganTreeObj=$.fn.zTree.getZTreeObj("organTree");
+            var sNodes = OrganTreeObj.getSelectedNodes();
+            var type=sNodes[0].type;//用户名称
+            if (sNodes.length!=0){
+                if(type==2){
+                    $("#title").html(title);
+                    $("#empInfo").load(url);
+                }else {
+                    layer.msg("请选择用户节点");
+                    $("#empInfo").html(null);
+                }
+            }else {
+                layer.msg("请选择用户节点");
+            }
+        }
+    })
+
+
+</script>
+</body>
+</html>

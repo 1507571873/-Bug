@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+    <ul class="layui-tab-title">
+        <li class="layui-this">请假审核</li>
+        <li>加班审核</li>
+        <li>补签审核</li>
+        <li>历史审核</li>
+    </ul>
+    <div class="layui-tab-content" style="height: 100px;">
+        <div class="layui-tab-item layui-show">
+            <table class="layui-hide" lay-filter="leaveAuditTable" id="leaveAuditTable"></table>
+        </div>
+        <div class="layui-tab-item">
+            <table class="layui-hide" ></table>
+        </div>
+        <div class="layui-tab-item">
+            <table class="layui-hide" ></table>
+        </div>
+        <div class="layui-tab-item">
+            <table class="layui-hide" lay-filter="historyAuditTable" id="historyAuditTable"></table>
+        </div>
+    </div>
+</div>
+<!--历史审批-->
+<script>
+    layui.use(['element','table','form'], function() {
+        var table = layui.table;
+        //历史审批的表格
+        var historyAuditTable = table.render({
+            elem: '#historyAuditTable'
+            , url: '/HistoryAuditController/queryHistoryAuditPage.do'
+            , height: 'full-200'
+            , cols: [
+                [
+                    {field: 'id', title: '选择', fixed: 'left', type: 'checkbox', align: "center"}
+                    , {field: 'deptName', fixed: 'left', align: "center", title: '部门'}
+                    , {field: 'realName', fixed: 'left', align: "center", title: '姓名'}
+                    , {field: 'leaveDays', align: "center", title: '请假天数'}
+                    , {field: 'remark', align: "center", title: '请假原因'}
+                    , {
+                    field: 'type', align: "center", title: '请假类型', templet: function (d) {
+                        if (d.type != null) {
+                            return d.type == 1 ? "因公" : "因私";
+                        } else {
+                            return "未知";
+                        }
+                    }
+                }
+                    , {
+                    field: 'startTime', align: "center", title: '开始时间'
+                    , templet: '<div>{{layui.util.toDateString(d.startTime, "yyyy-MM-dd HH:mm:ss") }}</div>'
+                } , {
+                    field: 'endTime', align: "center", title: '结束时间'
+                    , templet: '<div>{{layui.util.toDateString(d.endTime, "yyyy-MM-dd HH:mm:ss") }}</div>'
+                }
+
+                    , {field: 'auditStatus', align: "center", title: '审核状态', templet: function (d) {
+                        alert(d.auditStatus);
+                        if (d.auditStatus==500){
+                            return "审批不通过";
+                        }else if (d.auditStatus==400){
+                            return "审批通过";
+                        }else {
+                            return "待审批";
+                        }
+
+                    }
+                }
+                ]
+            ]
+            , page: {
+                layout: ['limit', 'count', 'prev', 'page', 'next', 'skip'] //自定义分页布局
+                , limit: 5
+                , limits: [5, 10, 15, 20]
+                , theme: '#37d5ff'
+            }
+        })
+    })
+</script>
+<!--请假审核-->
+<script>
+    layui.use(['element','table','form'], function() {
+        var form = layui.form;
+        var table = layui.table;
+
+        //请假审批的表格
+        var leaveAuditTable1 = table.render({
+            elem: '#leaveAuditTable'
+            , url: '/LeaveAuditController/queryLeaveAuditPage.do'
+            , height: 'full-200'
+            , cols: [
+                [
+                    {field: 'id', title: '选择', fixed: 'left', type: 'checkbox', align: "center"}
+                    , {field: 'deptName', fixed: 'left', align: "center", title: '部门'}
+                    , {field: 'realName', fixed: 'left', align: "center", title: '姓名'}
+                    , {field: 'leaveDays', align: "center", title: '请假天数'}
+                    , {field: 'remark', align: "center", title: '请假原因'}
+                    , {
+                    field: 'type', align: "center", title: '请假类型', templet: function (d) {
+                        if (d.type != null) {
+                            return d.type == 1 ? "因公" : "因私";
+                        } else {
+                            return "未知";
+                        }
+                    }
+                }
+                    , {
+                    field: 'startTime', align: "center", title: '开始时间'
+                    , templet: '<div>{{layui.util.toDateString(d.startTime, "yyyy-MM-dd HH:mm:ss") }}</div>'
+                } , {
+                    field: 'endTime', align: "center", title: '结束时间'
+                    , templet: '<div>{{layui.util.toDateString(d.endTime, "yyyy-MM-dd HH:mm:ss") }}</div>'
+                }
+
+                    , {field: 'auditStatus', align: "center", title: '审核状态', templet: function (d) {
+                            return "待审批";
+                        }
+            }, {fixed: 'right', title: '操作', toolbar: '#userTableLine', width: 150}
+                ]
+            ]
+            , page: {
+                layout: ['limit', 'count', 'prev', 'page', 'next', 'skip'] //自定义分页布局
+                , limit: 5
+                , limits: [5, 10, 15, 20]
+                , theme: '#37d5ff'
+            }
+        })
+        //监听行工具事件  请假审核
+        table.on('tool(leaveAuditTable)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'startAudit') {
+                startAudit(data.id);
+            }
+        });
+        function startAudit(id){
+            layer.open({
+                title: "开始审批",
+                type: 1,
+                area: ['40%', '40%'],
+                content: $("#auditForm").html(),
+                success: function () {
+                    form.render();
+                },
+                btn: ['提交', '取消'],
+                yes: function (index, layero) {
+                    var isAgree=$("[name=type]:checked").val();
+                    var remark=$("#remark").val();
+                    $.ajax({
+                        url: "/LeaveAuditController/addLeaveAudit.do",
+                        type: "post",
+                        dataType: "json",
+                        data:{
+                            ywId:id,
+                            isAgree:isAgree,
+                            remark:remark,
+                            ywlx:1
+                        },
+                        success: function (result) {
+                            if(result.code== 200){
+                                layer.alert("审批成功");
+                                leaveAuditTable1.reload();
+                                layer.close(index);
+                            }
+                        }
+                    })
+
+                }
+
+            })
+        }
+
+    })
+</script>
+<script type="text/html" id="auditForm">
+    <form class="layui-form layui-form-pane" id="addLeaveForm">
+        <div class="layui-form-item">
+            <label class="layui-form-label">是否同意</label>
+            <div class="layui-input-inline">
+                <input type="radio" name="type" value="1" title="同意" checked="">
+                <input type="radio" name="type" value="2" title="不同意">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">审批意见</label>
+            <div class="layui-input-inline">
+                <textarea name="remake" id="remake" class="layui-textarea" style="width: 500px"></textarea>
+            </div>
+        </div>
+    </form>
+</script>
+<!--行内监听-->
+<script type="text/html" id="userTableLine">
+    <a class="layui-btn layui-btn-xs" lay-event="startAudit">审核</a>
+</script>
+</body>
+</html>

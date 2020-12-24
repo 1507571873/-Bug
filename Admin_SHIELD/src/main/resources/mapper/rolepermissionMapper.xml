@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC  
+    "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+   
+<mapper namespace="com.shield.mapper.RolePermissionMapper">
+
+        <select id="queryRoleZtree"  resultType="java.util.Map">
+            select id,roleName name,0 pId from t_sys_role
+        </select>
+
+    <select id="queryPermissionTree" resultType="java.util.Map" parameterType="java.lang.Integer">
+        SELECT distinct sp.id id,sp.pname name ,sp.pId pId,if(sr.perId is null,'false','true' )checked FROM t_sys_permission sp
+           LEFT JOIN
+       (SELECT roleId,perId FROM t_sys_role_permission WHERE roleId=#{roleId}) sr on sp.id=sr.perId
+    </select>
+</mapper>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>用户登录</title>
+    <style type="text/css">
+        body{
+            background:#fff url(/commons/rog.jpg) no-repeat left top;
+            background-size:100%;
+        }
+    </style>
+    <script src="/commons/jquery/jquery-3.2.1.js"></script>
+    <script src="/commons/layui/layui.all.js"></script>
+    <link rel="stylesheet" href="/commons/login/css/login.css">
+    <script src="/commons/login/md5.js"></script>
+    <link rel="stylesheet" href="/commons/layui/css/layui.css">
+
+
+
+</head>
+
+<body>
+<div class="layadmin-user-login" id="LAY-user-login">
+    <div class="layadmin-user-login-main">
+        <div class="layadmin-user-login-box layadmin-user-login-header">
+            <h1><font color="aqua">神盾局</font></h1>
+            <p>漂亮国国防部后台管理平台</p>
+        </div>
+        <div class="layadmin-user-login-box layadmin-user-login-body layui-form">
+            <div class="layui-form-item">
+                <label class="layadmin-user-login-icon layui-icon" for="LAY-user-login-username">&#xe770;</label>
+                <input type="text"  name="userName" id="LAY-user-login-username" lay-verType="tips" lay-verify="required" placeholder="用户名" class="layui-input">
+            </div>
+            <div class="layui-form-item">
+                <label class="layadmin-user-login-icon layui-icon" for="LAY-user-login-password">&#xe688;</label>
+                <input type="password" name="password" id="LAY-user-login-password" lay-verType="tips" lay-verify="required" placeholder="密码" class="layui-input">
+            </div>
+            <!-- <div class="layui-form-item">
+                 <div class="layui-row">
+                     <div class="layui-col-xs7">
+                         <label class="layadmin-user-login-icon layui-icon" for="LAY-user-login-vercode">&#xe672;</label>
+                         <input type="text" name="vercode" id="LAY-user-login-vercode" lay-verType="tips" lay-verify="required" placeholder="图形验证码" class="layui-input">
+                     </div>
+                     <div class="layui-col-xs5">
+                         <div style="margin-left: 10px;">
+                             <img src="" class="layadmin-user-login-codeimg" id="LAY-user-get-vercode">
+                         </div>
+                     </div>
+                 </div>
+             </div>-->
+            <div class="layui-form-item">
+                <button class="layui-btn layui-btn-fluid" id="loginBtn" lay-filter="LAY-user-login-submit">登 录</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-trans layadmin-user-login-footer">
+        <p><font color="aqua">Copyright © 2018 </font></p>
+        <p><a href="javascript:;"><font color="aqua">FH_EDUCATION</font></a><font color="aqua"> All Rights Reserved.</font></p>
+    </div>
+</div>
+<script type="text/javascript">
+    layui.use(['form','layer'],function () {
+        var form=layui.form;
+        var layer=layui.layer;
+        $("#loginBtn").on("click",function () {
+            var userName=$("#LAY-user-login-username").val();
+            var password=$("#LAY-user-login-password").val();
+            if(userName == null || password == null){
+                layer.msg("用户名或者密码不能为空",{icon: 5});
+                return false;
+            }
+            var passMD5=hex_md5(password);
+            $.post("/loginController/doLogin.do",{
+                userName:userName,
+                password:passMD5
+            },function (result) {
+                if(result.code==2000){
+                    layer.msg(result.msg,{icon: 1});
+                    location.replace("/JumpController/loginover.do");
+                    return ;
+                }
+                if (result.code==5001){
+                    layer.msg(result.msg,{icon: 5});
+                    return ;
+                }
+                if (result.code==5002){
+                    layer.msg(result.msg,{icon: 5});
+                    return ;
+                }
+                if (result.code==5003){
+                    layer.msg(result.msg,{icon: 5});
+                }
+            })
+        })
+    })
+</script>
+</body>
+
+</html>

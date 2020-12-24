@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div class="layui-col-space8">
+    <div class="layui-col-md4">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                组织
+            </div>
+            <div class="layui-card-body">
+                <div class="ztree" id="organZTree"></div>
+            </div>
+        </div>
+    </div>
+    <div class="layui-col-md4">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                角色数
+                <button id="addRoleToUser" type="button" class="layui-btn layui-btn-normal layui-btn-radius layui-btn-disabled" disabled style="float: right;">给用户授予角色</button>
+            </div>
+            <div class="layui-card-body">
+                <div class="ztree" id="roleTree"></div>
+            </div>
+        </div>
+    </div>
+    <div class="layui-col-md4">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                用户权限
+            </div>
+            <div class="layui-card-body">
+                <div class="ztree" id="rightTree"></div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    var form;
+    layui.use(['form'],function(){
+        form=layui.form;
+        //zTree设置
+        var setting = {
+            view: {
+                selectedMulti: false,
+            },
+            edit: {
+                enable: true,//开启编辑模式     url失效
+                showRenameBtn: true //不显示重命名按钮
+            },
+            callback: {//捕捉节点的事件
+                //onRemove: removeMenu,//删除触发的事件
+                onClick:organClick
+            },
+        }
+        var roleSetting={
+            data: {
+                simpleData: {
+                    enable: true
+                }
+            },
+            check: {
+                enable: true,
+                chkStyle: "checkbox"
+            }
+        }
+        $.post({
+            dataType: "json",
+            url: "/OrganController/queryOrganZtree.do",
+            success: function (data) {
+                zTreeObj = $.fn.zTree.init($("#organZTree"), setting, data);
+            },
+            error: function () {
+                layer.msg("系统错误");
+            }
+        })
+
+        function organClick(event, treeId, treeNode){
+            //获取部门人员下拉树里面的type
+            var type = treeNode.type;
+            //判断是部门节点还是用户节点
+            if(type==2){
+                //查询的时候对id进行了拼接  在这里在进行截取
+                var userId = treeNode.id.split("_")[1];
+                //调用查询 角色树的方法
+                queryRoleTree(userId);
+                //删除新增按钮的class属性
+                $("#addRoleToUser").removeClass("layui-btn-disabled");
+                //关闭新增按钮的禁用
+                $("#addRoleToUser").attr("disabled",false);
+            }else{
+                layer.msg("请选择用户节点授予角色");
+                //如果type不等于2 则清空 角色树div 权限树div下的内容
+                $("#roleTree").html("");
+                $("#rightTree").html("");
+                //如果type不等于2 添加新增按钮的class属性
+                $("#addRoleToUser").addClass("layui-btn-disabled");
+                //如果type不等于2 开启新增按钮的禁用
+                $("#addRoleToUser").attr("disabled",true);
+            }
+        }
+
+        //查询树的方法
+        function queryRoleTree(userId){
+            $.post({
+                url:"/RoleController/queryRoleTree.do",
+                dataType:"json",
+                data:{
+                    userId:userId
+                },
+                success:function (result) {
+                    $.fn.zTree.init($("#roleTree"), roleSetting, result);
+                }
+            })
+        }
+
+        //新增   按钮绑定事件
+        $("#addRoleToUser").on("click",function (){
+            //获取到部门树的对象
+            var organZTreeObj = $.fn.zTree.getZTreeObj("organZTree");
+            //获取部门树被选中的节点
+            var selectedNodes=organZTreeObj.getSelectedNodes();
+            //截取userId
+            var userId = selectedNodes[0].id.split("_")[1];
+            //获取选择角色的Id
+            var roleZTreeObj = $.fn.zTree.getZTreeObj("roleTree");
+            //获取角色树被选中的节点
+            var checkedNodes = roleZTreeObj.getCheckedNodes(true);
+            var roleArr=[];
+            for (var i = 0 ; i<checkedNodes.length; i++){
+                roleArr.push(checkedNodes[i].id);
+            }
+
+            $.post({
+                data:{
+                    userId:userId,
+                    roleArr:roleArr
+                },
+                dataType:"text",
+                url:"/OrganController/addRoleToUser.do",
+                traditional: true,
+                success:function(data){
+                    if (data=="success"){
+                        layer.msg("用户赋予角色成功", {icon: 1});
+                    }else{
+                        layer.msg("用户赋予角色失败", {icon: 5});
+                    }
+                },
+                error:function(){
+                    layer.msg("系统错误");
+                }
+            })
+        })
+    })
+</script>
+</html>

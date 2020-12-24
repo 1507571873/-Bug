@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC  
+    "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+   
+<mapper namespace="com.shield.mapper.LogMapper">
+
+    <sql id="queryLogs">
+        <where>
+            <if test="realName!=null and realName!=''">
+                and realName=#{realName}
+            </if>
+            <if test="type!=null and type!=0">
+                and type=#{type}
+            </if>
+            <if test="createDate!=null">
+                and createTime &gt;= #{createDate}
+            </if>
+            <if test="endDate!=null">
+                and createTime &lt;= #{endDate}
+            </if>
+        </where>
+    </sql>
+
+    <insert id="addLogsInfo" parameterType="com.shield.model.Logs">
+        insert into t_sys_logs (userId,realName,createTime,type,methodName,className,args,runTime,describeInfo,errorInfo,userIp)
+        values
+        (#{userId},#{realName},#{createTime},#{type},#{methodName},#{className},#{args},#{runTime},#{describeInfo},#{errorInfo},#{userIp})
+    </insert>
+
+    <select id="queryLogsCount" parameterType="com.shield.model.Logs" resultType="long">
+        select count(*) from t_sys_logs
+        <include refid="queryLogs"/>
+    </select>
+
+    <!--查询用户数据-->
+    <select id="queryLogsTable" resultType="com.shield.model.Logs" parameterType="com.shield.model.Logs">
+        select * from t_sys_logs
+        <include refid="queryLogs"/>
+        limit #{startIndex},#{limit}
+    </select>
+
+    <select id="queryRushBMethobName" resultType="list">
+        select methodName from t_sys_logs
+    </select>
+
+    <select id="queryRushBRunTime" resultType="long">
+        select runTime from t_sys_logs
+    </select>
+</mapper>

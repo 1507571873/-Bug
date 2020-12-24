@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC  
+    "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+   
+<mapper namespace="com.shield.mapper.ContactAddressMapper">
+
+    <insert id="addContact" parameterType="com.shield.model.ContactAddress">
+        insert into t_rs_contactaddress (residentialAddress,phone,exigencyContacts,exigencyPhone,postCode,userId,operatorId,createDate,updateDate)
+        values
+        (#{residentialAddress},#{phone},#{exigencyContacts},#{exigencyPhone},#{postCode},#{userId},#{operatorId},sysdate(),sysdate())
+    </insert>
+
+    <select id="queryContactAllByUserId" parameterType="integer" resultType="com.shield.model.ContactAddress">
+        select * from t_rs_contactaddress where userId=#{userId}
+    </select>
+
+    <select id="queryAddressById" parameterType="integer" resultType="com.shield.model.ContactAddress">
+        select * from t_rs_contactaddress where id=#{id}
+    </select>
+
+    <update id="updateContact" parameterType="com.shield.model.ContactAddress">
+        update t_rs_contactaddress set residentialAddress=#{residentialAddress},phone=#{phone},exigencyContacts=#{exigencyContacts},
+        exigencyPhone=#{exigencyPhone},postCode=#{postCode},userId=#{userId},operatorId=#{operatorId},updateDate=sysdate()
+        where id=#{id}
+    </update>
+
+    <delete id="deleteContactById" parameterType="integer">
+        delete from t_rs_contactaddress where id = #{id}
+    </delete>
+</mapper>

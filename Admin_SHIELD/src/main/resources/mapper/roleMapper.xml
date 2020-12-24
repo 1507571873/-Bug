@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC  
+    "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+   
+<mapper namespace="com.shield.mapper.RoleMapper">
+
+        <select id="queryRoleTree" parameterType="java.lang.Integer" resultType="java.util.Map">
+            select id,roleName name,0 pId,if(ur.roleId is NULL,'false','true') checked from t_sys_role  r
+                LEFT JOIN
+                (select userId,roleId  from t_sys_user_role where userId=#{userId}) ur
+                on r.id=ur.roleId
+            order by r.id
+        </select>
+</mapper>

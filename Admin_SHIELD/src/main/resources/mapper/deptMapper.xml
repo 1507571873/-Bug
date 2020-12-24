@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC  
+    "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+   
+<mapper namespace="com.shield.mapper.DeptMapper">
+    <!--查询-->
+    <select id="queryZTree" resultType="com.shield.model.Dept">
+        select id,name,pid from t_sys_dept where isValid=1
+    </select>
+
+    <!--逻辑删除-->
+    <update id="removeMenu" parameterType="integer">
+        update t_sys_dept set isValid=0 where id=#{id}
+    </update>
+
+    <!--新增-->
+    <insert id="saveUserData" parameterType="com.shield.model.Dept">
+        insert into t_sys_dept (pid,isValid,createTime,name,updateTime)
+        values (#{pid},#{isValid},sysDate(),#{name},sysDate())
+    </insert>
+
+    <!--修改-->
+    <update id="updateUserData" parameterType="com.shield.model.Dept">
+        update t_sys_dept set name=#{name},updateTime= sysDate(),isValid=#{isValid} where id=#{id}
+    </update>
+
+    <!--回显-->
+    <select id="queryByIdZTree" resultType="com.shield.model.Dept" parameterType="integer">
+        select name,pid,isValid from t_sys_dept where id=#{id}
+    </select>
+</mapper>

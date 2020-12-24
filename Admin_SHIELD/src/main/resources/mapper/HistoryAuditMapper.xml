@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.shield.mapper.HistoryAuditMapper">
+
+    <select id="queryHistoryAuditCount" resultType="long">
+        select count(cl.id)
+        from t_kq_leave cl
+                 right join
+             (select *
+              from t_kq_auditchecking
+              where userId = #{userId}
+                and auditType in (#{auditType}, #{leaveAuditPass})) ca on
+                 ca.businessId = cl.id
+        where cl.userId != #{userId}
+    </select>
+
+    <select id="queryHistoryAuditPage" resultType="com.shield.model.Leave">
+        select cl.id,
+               cl.userId,
+               cl.realName,
+               d.name,
+               cl.startTime,
+               cl.endTime,
+               cl.startType,
+               cl.endType,
+               cl.type,
+               cl.leaveDays,
+               cl.remark,
+               cl.auditStatus
+        from t_kq_leave cl
+                 inner join
+             (select *
+              from t_kq_auditchecking
+              where userId = #{userId} and auditType in (#{auditType}, #{leaveAuditPass})) ca on
+                 ca.businessId = cl.id
+                 left join t_sys_dept d on cl.deptId = d.id
+        where cl.userId != #{userId}
+        order by cl.updateTime
+        limit #{userVo.startIndex},#{userVo.limit}
+
+    </select>
+</mapper>

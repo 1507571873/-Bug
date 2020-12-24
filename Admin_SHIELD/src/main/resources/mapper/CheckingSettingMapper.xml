@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC  
+    "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+   
+<mapper namespace="com.shield.mapper.CheckingSettingMapper">
+
+    <delete id="deleteCheckingDate" parameterType="string">
+        delete from t_kq_checkingsetting where year=#{year}
+    </delete>
+    
+    <insert id="addNoCheckingDate">
+        insert into t_kq_checkingsetting (year,noCheckingDate,userId) values 
+        <foreach collection="dates" item="nodate" separator=",">
+            (#{year},#{nodate},#{userId})
+        </foreach>
+    </insert>
+
+    <select id="selectNoCheckingDate" parameterType="string" resultType="string">
+        select noCheckingDate from t_kq_checkingsetting where year=#{year}
+    </select>
+
+    <select id="getCount" parameterType="string" resultType="long">
+        select count(id) from t_kq_checkingsetting where noCheckingDate=#{leaveDate}
+    </select>
+
+</mapper>

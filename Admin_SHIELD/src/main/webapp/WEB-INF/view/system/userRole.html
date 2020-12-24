@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>$Title$</title>
+</head>
+<body>
+<div class="layui-row layui-col-space20">
+    <div class="layui-col-md4">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                组织机构
+            </div>
+            <div class="layui-card-body">
+                <div class="ztree" id="organTree"></div>
+            </div>
+        </div>
+    </div>
+    <div class="layui-col-md4">
+        <div class="layui-card">
+            <div class="layui-card-header">给用户授予角色
+                <button id="addRoleToUser" type="button" class="layui-btn layui-btn-normal layui-btn-radius layui-btn-disabled" disabled style="float: right;">给用户授予角色</button>
+            </div>
+            <div class="layui-card-body">
+                <div class="ztree" id="roleTree"></div>
+            </div>
+        </div>
+    </div>
+    <div class="layui-col-md4">
+        <div class="layui-card">
+            <div class="layui-card-header">用户拥有权限</div>
+            <div class="layui-card-body">
+                <div class="ztree" id="rightTree"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var form;
+    layui.use(['form'],function(){
+        form=layui.form;
+        var organSetting={
+            view: {
+                selectedMulti: false
+            },
+            callback:{
+                onClick:organClick
+            }
+        }
+        var roleSetting={
+            data: {
+                simpleData: {
+                    enable: true
+                }
+            },
+            check: {
+                enable: true,
+                chkStyle: "checkbox"
+            }
+        }
+
+        $.ajax({
+            url:"/OrganController/queryOrganZtree.do",
+            dataType:"json",
+            ansyc:false,
+            type:"get",
+            success:function (result) {
+                $.fn.zTree.init($("#organTree"), organSetting, result).expandAll(true);
+            }
+
+        })
+        //判断点击的节点
+        function organClick(event, treeId, treeNode){
+            var type=treeNode.type;
+            if(type == 2){
+                var userId=treeNode.id.split("_")[1];
+                //查询角色树
+                queryRoleTree(userId);
+                //查询权限树
+                queryPermissionTree(userId);
+                $("#addRoleToUser").removeClass("layui-btn-disabled");
+                $("#addRoleToUser").attr("disabled",false);
+            }else{
+                layer.msg("请选择用户节点授予角色");
+                $("#roleTree").html("");
+                $("#rightTree").html("");
+                $("#addRoleToUser").addClass("layui-btn-disabled");
+                $("#addRoleToUser").attr("disabled",true);
+            }
+        }
+        //新增
+        $("#addRoleToUser").on("click",function () {
+            var organTreeObj=$.fn.zTree.getZTreeObj("organTree");
+            var selectedNodes=organTreeObj.getSelectedNodes();
+            var userId=selectedNodes[0].id.split("_")[1];
+            //获取选中角色ID
+            var roleTreeObj=$.fn.zTree.getZTreeObj("roleTree");
+            var checkedNodes=roleTreeObj.getCheckedNodes(true);
+            var roleArr=[];
+            for (var i=0;i<checkedNodes.length;i++) {
+                roleArr.push(checkedNodes[i].id);
+            }
+
+            $.ajax({
+                url:"/OrganController/addRoleToUser.do",
+                dataType:"text",
+                traditional:true,
+                ansyc:false,
+                data:{
+                    userId:userId,
+                    roleArr:roleArr
+                },
+                type:"post",
+                success:function (result) {
+                    if(result == "success"){
+                        //查询权限树
+                        queryPermissionTree(userId);
+                        layer.msg("用户授予角色成功", {icon: 1})
+                    }else{
+                        layer.msg("用户授予角色失败", {icon: 5})
+                    }
+                }
+
+            })
+
+        })
+        var rightSetting={
+            data: {
+                simpleData: {
+                    enable: true
+                }
+            }
+        }
+        //查询权限树
+        function queryPermissionTree(userId){
+            $.ajax({
+                url:"/PermissionController/queryPermissionTree.do",
+                dataType:"json",
+                ansyc:false,
+                data:{
+                    userId:userId
+                },
+                success:function (result) {
+
+                    $.fn.zTree.init($("#rightTree"), rightSetting, result).expandAll(true);
+                }
+
+            })
+        }
+        //查询角色树
+        function queryRoleTree(userId){
+            $.ajax({
+                url:"/RoleController/queryRoleTree.do",
+                dataType:"json",
+                ansyc:false,
+                type:"get",
+                data:{
+                    userId:userId
+                },
+                success:function (result) {
+                    $.fn.zTree.init($("#roleTree"), roleSetting, result).expandAll(true);
+                }
+
+            })
+
+        }
+    })
+</script>
+</body>
+</html>

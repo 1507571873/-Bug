@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.shield.mapper.OrganMapper">
+    <insert id="addRoleToUser">
+        insert into t_sys_user_role (userId,roleId)
+        values
+        <foreach collection="roleArr" item="roleId" separator=",">
+            (#{userId},#{roleId})
+        </foreach>
+    </insert>
+
+    <delete id="removeRoleToUser">
+        delete
+        from t_sys_user_role
+        where userId = #{userId}
+    </delete>
+
+    <select id="queryOrganZtree" resultType="com.shield.model.Organ">
+        SELECT CONCAT('dept_', id) id, name organName, CONCAT('dept_', pid) pid, 1 type, null sex
+        FROM t_sys_dept
+        UNION ALL
+        SELECT CONCAT('user_', id) id, realName organName, CONCAT('dept_', deptId) pid, 2 type, sex
+        FROM t_sys_user
+    </select>
+
+    <select id="queryOrganTree" parameterType="integer" resultType="com.shield.model.Organ">
+        SELECT ou.id, ou.organName, ou.pid, type, sex, if(ru.userId is null, 'false', 'true') CHECKED
+        FROM (SELECT CONCAT('dept_', id) id, name organName, CONCAT('dept_', pid) pid, 1 type, null sex
+              FROM t_sys_dept
+              UNION ALL
+              SELECT CONCAT('user_', id) id, realName organName, CONCAT('dept_', deptId) pid, 2 type, sex
+              FROM t_sys_user) ou
+                 LEFT JOIN
+                 (SELECT id, userId, roleId FROM t_sys_user_role WHERE roleId = #{roleId}) ru
+                 ON ou.id = CONCAT('user_', ru.userId)
+    </select>
+
+    <select id="getUserById" resultType="com.shield.model.User" parameterType="integer">
+        select userName,
+               realName,
+               phone,
+               email,
+               idCard,
+               sex,
+               birthday,
+               imgUrl,
+               eduId,
+               provinceCode,
+               cityCode,
+               areaCode,
+               deptId
+        from t_sys_user
+        where id = #{userId}
+    </select>
+
+</mapper>

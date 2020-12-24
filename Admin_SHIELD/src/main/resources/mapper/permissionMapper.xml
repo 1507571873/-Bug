@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.shield.mapper.PermissionMapper">
+    <insert id="saveUserData" parameterType="com.shield.model.Permission">
+        insert into t_sys_permission (pname, pid, purl, isValid, pkey, type)
+        values (#{pname}, #{pid}, #{purl}, #{isValid}, #{pkey}, #{type})
+    </insert>
+    <insert id="addRolePermission">
+        insert into t_sys_role_permission (roleId,perId)
+        values
+        <foreach collection="permissionId" separator="," item="perId">
+            (#{roleId},#{perId})
+        </foreach>
+    </insert>
+
+    <update id="updateUserData" parameterType="com.shield.model.Permission">
+        update t_sys_permission
+        set id=#{id},
+            pname=#{pname},
+            type=#{type},
+            pkey=#{pkey},
+            isValid=#{isValid},
+            purl=#{purl}
+        where id = #{id}
+    </update>
+
+
+    <!--查询-->
+    <select id="queryPermissionZtree" resultType="com.shield.model.Permission">
+        select id, pname, pid, purl, type, pkey, isValid
+        from t_sys_permission
+    </select>
+
+    <select id="queryByIdZTree" resultType="com.shield.model.Permission" parameterType="integer">
+        select id, pname, pid, purl, type, pkey, isValid
+        from t_sys_permission
+        where id = #{id}
+    </select>
+
+    <select id="queryPermissionTree" resultType="java.util.Map" parameterType="integer">
+        SELECT distinct p.pname name, p.id id, p.pid pId, p.type type
+        FROM t_sys_user_role ur
+                 LEFT JOIN t_sys_role_permission rp ON ur.roleId = rp.roleId
+                 LEFT JOIN t_sys_permission p ON rp.perId = p.id
+        where ur.userId = #{userId}
+    </select>
+
+    <select id="queryMenuListByUserId" resultType="com.shield.model.Permission" parameterType="integer">
+        SELECT distinct p.pname, p.id, p.pid, p.type,p.purl
+        FROM t_sys_user_role ur
+                 LEFT JOIN t_sys_role_permission rp ON ur.roleId = rp.roleId
+                 LEFT JOIN t_sys_permission p ON rp.perId = p.id
+        where ur.userId = #{userId} and p.type = 1
+    </select>
+
+    <delete id="removePermission" parameterType="integer">
+        delete from t_sys_role_permission where roleId =#{roleId}
+    </delete>
+</mapper>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<button type="button" class="layui-btn" onclick="addHonor()">新增</button>
+<div id="honorHtml">
+
+</div>
+</body>
+<script>
+    var OrganTreeObj = $.fn.zTree.getZTreeObj("organTree");
+    var sNodes = OrganTreeObj.getSelectedNodes();
+    var userId = sNodes[0].id.split("_")[1];//获取用户Id
+    var userName = sNodes[0].name;//用户名称
+    var form;
+    layui.use("form", function () {
+        form = layui.form;
+        //数据展示
+        $.post({
+            data: {"userId": userId},
+            dataType: "json",
+            url: "/HonorController/queryHonorDataByUserId.do",
+            success: function (rs) {
+                var data = rs.data;
+                jointHonorHtml(data);
+            }
+        })
+    })
+
+    //拼接
+    function jointHonorHtml(data) {
+        var htmls = "";
+        for (var i = 0; i < data.length; i++) {
+            htmls += '<fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">';
+            htmls += '<legend>' + data[i].honorTitle + '<button type="button" class="layui-btn layui-btn-primary layui-btn-sm" onclick="updateHonor(' + data[i].id + ')"><i class="layui-icon"></i></button><button type="button" class="layui-btn layui-btn-primary layui-btn-sm" onclick="deleteHonor(' + data[i].id + ')"><i class="layui-icon"></i></button></legend>'
+            htmls += '</fieldset>';
+            htmls += '<blockquote class="layui-elem-quote">' + data[i].honorData + '</blockquote>';
+        }
+        $("#honorHtml").html(htmls);
+    }
+
+    //删除
+    function deleteHonor(id) {
+        $.post({
+            data: {"id": id},
+            dataType: "json",
+            url: "/HonorController/deleteHonorById.do",
+            success: function (rs) {
+                if (rs.code == 200) {
+                    layer.msg(rs.msg);
+                    fileOnclick('/JumpController/toHonor.do', '个人荣誉');
+                }
+            }
+        })
+    }
+
+    //修改
+    function updateHonor(id) {
+        layer.open({//弹框
+            type: 1,
+            title: "新增/修改弹窗",
+            area: ['30%', '50%'],
+            content: $("#addHtml").html(),
+            success: function () {//弹框成功
+                $("#userName").val(userName);
+                $("#operatorId").val(userId);
+                $("#userId").val(userId);
+                $.post({
+                    data: {"id": id},
+                    dataType: "json",
+                    url: "/HonorController/queryHonorById.do",
+                    success: function (rs) {
+                        $("#id").val(rs.data.id);
+                        $("#createDate").val(rs.data.createDate);
+                        $("#honorTitle").val(rs.data.honorTitle);
+                        $("#honorData").val(rs.data.honorData);
+                    }
+                })
+                form.render();
+            },
+            btn: ['提交', '取消'],
+            yes: function (index, layero) {//点击确定
+                $.post({
+                    data: $("#UserHonorForm").serialize(),
+                    dataType: "json",
+                    url: "/HonorController/updateHonor.do",
+                    success: function (rs) {
+                        if (rs.code == 200) {
+                            layer.close(index);//关闭弹窗
+                            layer.msg(rs.msg);
+                            fileOnclick('/JumpController/toHonor.do', '个人荣誉');
+                        }
+                    }
+                })
+
+            }
+        })
+    }
+
+    //新增
+    function addHonor() {
+        //var userName=sNodes[0].name;//用户名称
+        layer.open({//弹框
+            type: 1,
+            title: "新增/修改弹窗",
+            area: ['30%', '50%'],
+            content: $("#addHtml").html(),
+            success: function () {//弹框成功
+                $("#userName").val(userName);
+                $("#operatorId").val(userId);
+                $("#userId").val(userId);
+                form.render();
+
+            },
+            btn: ['提交', '取消'],
+            yes: function (index, layero) {//点击确定
+                //发送ajax请求
+                $.post({
+                    data: $("#UserHonorForm").serialize(),
+                    dataType: "json",
+                    url: "/HonorController/addHonor.do",
+                    success: function (rs) {
+                        if (rs.code == 200) {
+                            layer.close(index);//关闭弹窗
+                            layer.msg(rs.msg);
+                            fileOnclick('/JumpController/toHonor.do', '个人荣誉');
+                        }
+                    }
+                })
+
+            }
+        })
+
+    }
+</script>
+<script type="text/html" id="addHtml">
+    <form class="layui-form layui-form-pane" id="UserHonorForm">
+        <div class="layui-form-item">
+            <label class="layui-form-label">用户名</label>
+            <div class="layui-input-block">
+                <input type="text" readonly id="userName" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <!--影藏id-->
+        <input type="hidden" id="id" name="id">
+        <!--用户id 影藏域-->
+        <input type="hidden" id="userId" name="userId">
+        <!--操作id 影藏域-->
+        <input type="hidden" id="operatorId" name="operatorId">
+        <div class="layui-form-item">
+            <label class="layui-form-label">荣誉</label>
+            <div class="layui-input-block">
+                <input type="text" name="honorTitle" id="honorTitle" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <label class="layui-form-label">荣誉描述</label>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <textarea type="textarea" name="honorData" id="honorData" autocomplete="off"
+                          style="width:430px;height:130px" class="layui-textarea"></textarea>
+            </div>
+        </div>
+    </form>
+</script>
+</html>

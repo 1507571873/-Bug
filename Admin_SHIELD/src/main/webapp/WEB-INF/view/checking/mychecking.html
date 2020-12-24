@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>我的打卡记录</title>
+    <link rel="stylesheet" href="../../../commons/checking/date.css">
+</head>
+<body>
+<!-- 你的HTML代码 -->
+<div class="layui-container" style="padding: 15px;">
+    <div class="layui-row">
+        <div class="layui-col-md12">
+            <blockquote class="layui-elem-quote">我的考勤
+                <button type="button" class="layui-btn" style="background-color: #00b319">考勤正常</button>
+                <button type="button" class="layui-btn " style="background-color: #2bc9f1">迟到或早退</button>
+                <button type="button" class="layui-btn " style="background-color: #ef7ef8">迟到且早退</button>
+                <button type="button" class="layui-btn " style="background-color: #FF1849">未打卡</button>
+                <button type="button" style="float: right" id="afterWorkBtn"
+                        class="layui-btn layui-btn-normal layui-btn-radius">下班打卡
+                </button>
+            </blockquote>
+            <div class="layui-inline" id="test-n2"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    layui.use(['layer', 'form', 'jquery', 'laydate'], function () {
+        var layer = layui.layer,
+            $ = layui.jquery,
+            laydate = layui.laydate,
+            form = layui.form;
+
+        //当前日期
+        var nowDate = new Date();
+        //数据库的打卡数据
+        var submitDate = [];
+        //数据库的不考勤日期
+        var noCheckingDate=[];
+        //定义json
+        var data = {};
+        //调用页面第一次进来回显的方法
+        initDate();
+        noChecking();
+        //页面第一次进来回显
+        function initDate() {
+            $.post({
+                data: {
+                    "month": nowDate.getFullYear() + "-" + (nowDate.getMonth() + 1) + "-" + nowDate.getDate()
+                },
+                dataType: "json",
+                url: "/MyCheckingController/queryCheckingByMonth.do",
+                success: function (result) {
+                    for (var i = 0; i < result.length; i++) {
+                        //获取打卡日期
+                        var checkingDate = new Date(result[i].clockInTime);
+                        //日期格式转换成字符串
+                        var newDate = checkingDate.getFullYear() + "-" + (checkingDate.getMonth() + 1) + "-" + checkingDate.getDate();
+                        //判断下班是否打卡
+                        if (result[i].afterWorkTime == null) {
+                            //下班如果没打卡或者没到下班时间 显示下班未打卡
+                            data[newDate] = "上班：" + result[i].clockInTime + "<br/>下班：未打卡";
+                        } else {
+                            //否则就直接把上下班打卡时间显示出来
+                            data[newDate] = "上班：" + result[i].clockInTime + "<br/>下班：" + result[i].afterWorkTime;
+                        }
+                    }
+                    //给submitData赋值 把数据库的打卡数据放入submitData
+                    submitDate = result;
+                    //清空div 清空以后调用下边的方法 重新加载
+                    $("#test-n2").html("");
+                    //调用日期插件的方法
+                    loding_date(new Date(), data);
+                }
+            })
+        }
+
+        //不考勤日期
+        function noChecking(){
+            $.ajax({
+                url:"/CheckingSettingController/selectNoCheckingDate.do",
+                type:"get",
+                dataType:"json",
+                async:false,
+                data:{
+                    year:nowDate.getFullYear()
+                },
+                success:function (result) {
+                    noCheckingDate=result;
+                }
+            })
+        }
+
+        //日历插件调用方法
+        function loding_date(date_value, data) {
+            laydate.render({
+                elem: '#test-n2'
+                , type: 'date'
+                , theme: 'grid'
+                , position: 'static'
+                , range: false
+                , value: date_value
+                , isInitValue: false
+                , calendar: false
+                , btns: false
+                , ready: function (value) {
+                    settingColor();
+                }
+                , done: function (value, date, endDate) {
+                }
+                , change: function (value, date) {
+                    settingColor();
+                }
+                , mark: data//重要json！
+            });
+        }
+
+        //设置不同打卡状态的颜色
+        function settingColor() {
+            //移除之前的class属性
+            $(".layui-this").removeClass("layui-this");
+            var tdDom = $("td");
+            tdDom.each(function () {
+                var currDate = $(this).attr('lay-ymd');
+                var flag = 1;
+                for (var i = 0; i < submitDate.length; i++) {
+                    var checkingDate = new Date(submitDate[i].clockInTime);
+                    var newDate = checkingDate.getFullYear() + "-" + (checkingDate.getMonth() + 1) + "-" + checkingDate.getDate();
+                    var clockStatus = submitDate[i].clockStatus;
+                    var afterWorkStatus = submitDate[i].afterWorkStatus;
+                    if (newDate == currDate) {
+                        flag = 2;
+                        if (afterWorkStatus == null || (clockStatus > 1 && afterWorkStatus > 1)) {
+                            $('td[lay-ymd="' + currDate + '"]').addClass("bgPink");
+                        } else if (clockStatus > 1 || afterWorkStatus > 1) {
+                            $('td[lay-ymd="' + currDate + '"]').addClass("bgSkyBlue");
+                        } else if (clockStatus == 1 && afterWorkStatus == 1) {
+                            $('td[lay-ymd="' + currDate + '"]').addClass("bgGreen");
+                        }
+                        break;
+                    }
+                }
+                if (flag == 1) {
+                    var currD = new Date(currDate);
+                    if (currD.getTime() < nowDate.getTime()) {
+                        var noCheckingFlag = 1;
+                        for (var i = 0; i < noCheckingDate.length; i++) {
+                            var date = new Date(noCheckingDate[i]);
+                            var newDate = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
+                            if (newDate == currDate) {
+                                noCheckingFlag = 2;
+                                $(this).html(currDate + "<br/>不考勤")
+                                break;
+                            }
+                        }
+                        if (noCheckingFlag == 1) {
+                            $('td[lay-ymd="' + currDate + '"]').addClass("bgRed");
+                        }
+                    }
+                }
+            })
+        }
+
+        $("#afterWorkBtn").on("click",function () {
+            var currentDate=new Date();
+            layer.confirm('是否现在下班?，下班时间为：'+dateFormat('YYYY-mm-dd HH:MM:SS',currentDate), function(index){
+                $.ajax({
+                    url:"/MyCheckingController/addAfterWorkTime.do",
+                    type:"post",
+                    dataType:"json",
+                    data:{
+                        afterWorkTime:dateFormat('YYYY-mm-dd HH:MM:SS',currentDate)
+                    },
+                    success:function (result) {
+                        if(result.code==200){
+                            layer.alert("下班打卡成功");
+                            layer.close(index);
+                            noChecking();
+                            initDate();
+                        }
+                    }
+                })
+            });
+        })
+        function dateFormat(fmt, date) {
+            var ret;
+            var opt = {
+                "Y+": date.getFullYear().toString(),        // 年
+                "m+": (date.getMonth() + 1).toString(),     // 月
+                "d+": date.getDate().toString(),            // 日
+                "H+": date.getHours().toString(),           // 时
+                "M+": date.getMinutes().toString(),         // 分
+                "S+": date.getSeconds().toString()          // 秒
+                // 有其他格式化字符需求可以继续添加，必须转化成字符串
+            };
+            for (var k in opt) {
+                ret = new RegExp("(" + k + ")").exec(fmt);
+                if (ret) {
+                    fmt = fmt.replace(ret[1], (ret[1].length == 1) ? (opt[k]) : (opt[k].padStart(ret[1].length, "0")))
+                };
+            };
+            return fmt;
+        }
+    })
+</script>
+</body>
+</html>

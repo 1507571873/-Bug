@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+    <!--securityManager：这个属性是必须的-->
+    <!--loginUrl：没有登录的用户请求需要登录的页面时自动跳转到登录页面，不是必须的属性，
+    不输入地址的话会自动寻找项目web项目的根目录下的”/login.jsp”页面-->
+    <!--successUrl：登录成功默认跳转页面-->
+    <!--unauthorizedUrl：没有权限默认跳转的页面-->
+    <!--anon表示不要验证就可以访问-->
+    <!--roles["admin"] 需要admin觉得才能访问-->
+    <!--perms["user:delete"] 需要delete权限才能访问-->
+    <!--authc：该过滤器下的页面必须验证后才能访问-->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <property name="securityManager" ref="securityManager"/>
+        <property name="loginUrl" value="/"/>
+        <property name="unauthorizedUrl" value="403.html"/>
+        <property name="filters">
+            <map>
+                <entry key="loginFilter">
+                    <bean class="com.shield.shiro.LoginFilterForm"/>
+                </entry>
+            </map>
+        </property>
+        <property name="filterChainDefinitions">
+            <value>
+                /loginController/** = anon
+                / = anon
+                /logout=logout
+                /noRight.html = anon
+                /noSession.html=anon
+                /login.html = anon
+                /login/** = anon
+                /commons/** = anon
+                /logout=logout
+                /** = loginFilter
+            </value>
+        </property>
+    </bean>
+
+    <!--创建SecurityManager对象-->
+    <bean class="org.apache.shiro.web.mgt.DefaultWebSecurityManager" id="securityManager">
+        <property name="realm" ref="realm"/>
+        <property name="sessionManager" ref="sessionManager"/>
+    </bean>
+    <!--创建自定义realm-->
+    <bean class="com.shield.shiro.CustomRealm" id="realm">
+        <property name="credentialsMatcher" ref="credentialsMatcher"/>
+        <!-- shiro使用redis缓存 -->
+        <property name="cacheManager" ref="redisCacheManager"/>
+    </bean>
+    <!--设计加密方式为MD5，加密次数为1次-->
+    <bean class="org.apache.shiro.authc.credential.HashedCredentialsMatcher" id="credentialsMatcher">
+        <property name="hashAlgorithmName" value="md5"/>
+        <property name="hashIterations" value="2"/>
+    </bean>
+
+    <!--创建sessionManager-->
+    <!--<bean class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager" id="sessionManager">-->
+    <!--使用自定义sessionManager-->
+    <bean class="com.shield.shiro.CustomSessionManager" id="sessionManager">
+        <property name="sessionDAO" ref="redisSessionDao"/>
+    </bean>
+
+    <bean class="com.shield.shiro.RedisSessionDao" id="redisSessionDao"/>
+    <bean class="com.shield.shiro.RedisCacheManager" id="redisCacheManager">
+        <property name="jedisUtils" ref="jedisUtils"/>
+    </bean>
+    <bean class="com.shield.utils.JedisUtils" id="jedisUtils"/>
+
+
+</beans>

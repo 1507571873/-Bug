@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div id="EduHtml">
+
+</div>
+<input type="button" class="layui-btn" onclick="addEdu()" value="新增">
+</body>
+<script>
+    var OrganTreeObj = $.fn.zTree.getZTreeObj("organTree");
+    var sNodes = OrganTreeObj.getSelectedNodes();
+    var userId = sNodes[0].id.split("_")[1];//获取用户Id
+    var userName = sNodes[0].name;//用户名称
+    var form;
+    var laydate;
+    layui.use(["form", "laydate"], function () {
+        form = layui.form;
+        laydate = layui.laydate;
+
+        $.post({
+            data: {"userId": userId},
+            dataType: "json",
+            url: "/EduXperiencesController/queryEduXperData.do",
+            success: function (rs) {
+                data = rs.data;
+                appendHtml(data);
+            }
+        })
+
+        //拼接
+        function appendHtml(data) {
+            var htmls = "";
+            for (var i = 0; i < data.length; i++) {
+                htmls += '<ul class="layui-timeline" id="timeLine">'
+                htmls += '<li class="layui-timeline-item">'
+                htmls += '<i class="layui-icon layui-timeline-axis"></i>'
+                htmls += '<div class="layui-timeline-content layui-text">'
+                htmls += '<div class="layui-timeline-title" id=' + data[i].id + '>'
+                htmls += '<button type="button" class="layui-btn" onclick="deleteEduXper(' + data[i].id + ')">删除</button>' + '<button type="button" class="layui-btn" onclick="updateEduXper(' + data[i].id + ')">修改</button></br>';
+                htmls += "学历：" + data[i].education + "</br>"
+                htmls += "毕业院校：" + data[i].graduate + "</br>"
+                htmls += "时间：" + data[i].startDate + "--" + data[i].endDate + "</br>"
+                htmls += "教育经历：" + data[i].eduXperiences + "</br>"
+                htmls += '</div>'
+                htmls += '</div>'
+                htmls += '</li>'
+                htmls += '</ul>'
+            }
+            $("#EduHtml").html(htmls);
+        }
+    })
+
+    //修改
+    function updateEduXper(id) {
+        layer.open({
+            type: 1,
+            title: "新增弹窗",
+            area: ['45%', '55%'],
+            content: $("#addHtml").html(),
+            success: function () {//弹框成功
+                $.post({
+                    data: {"id": id},
+                    dataType: "json",
+                    url: "/EduXperiencesController/queryEduXperById.do",
+                    success: function (rs) {
+                        if (rs.code == 200) {
+                            $("#id").val(id);
+                            $("#userName").val(userName);
+                            $("#operatorId").val(userId);
+                            $("#education").val(rs.data.education);
+                            $("#graduate").val(rs.data.graduate);
+                            $("#startDate").val(rs.data.startDate);
+                            $("#endDate").val(rs.data.endDate);
+                            $("#eduXperiences").val(rs.data.eduXperiences);
+                            laydate.render({//渲染日期
+                                elem: "#startDate",
+                                type: "date",
+                                format: "yyyy-MM-dd"
+                            })
+                            laydate.render({//渲染日期
+                                elem: "#endDate",
+                                type: "date",
+                                format: "yyyy-MM-dd"
+                            })
+                            form.render();
+                        }
+                    }
+                })
+            },btn: ['提交', '取消'],
+            yes: function (index, layero) {//点击确定
+                //发送ajax请求
+                $.post({
+                    data: $("#UserEduForm").serialize(),
+                    dataType: "json",
+                    url: "/EduXperiencesController/updateEduXper.do",
+                    success: function (rs) {
+                        if (rs.code == 200) {
+                            layer.close(index);//关闭弹窗
+                            layer.msg(rs.msg);
+                            fileOnclick('/JumpController/toEduXperiences.do', '教育经历');
+                        }
+                    }
+                })
+
+            }
+        })
+    }
+
+    //删除
+    function deleteEduXper(id) {
+        $.post({
+            data: {"id": id},
+            dataType: "json",
+            url: "/EduXperiencesController/deleteEduXper.do",
+            success: function (rs) {
+                if (rs.code == 200) {
+                    layer.msg(rs.msg);
+                    fileOnclick('/JumpController/toEduXperiences.do', '教育经历');
+                }
+            }
+        })
+    }
+
+    //新增
+    function addEdu() {
+        layer.open({
+            type: 1,
+            title: "新增弹窗",
+            area: ['45%', '55%'],
+            content: $("#addHtml").html(),
+            success: function () {//弹框成功
+                $("#userName").val(userName);
+                $("#operatorId").val(userId);
+                $("#userId").val(userId);
+                laydate.render({//渲染日期
+                    elem: "#startDate",
+                    type: "date",
+                    format: "yyyy-MM-dd"
+                })
+                laydate.render({//渲染日期
+                    elem: "#endDate",
+                    type: "date",
+                    format: "yyyy-MM-dd"
+                })
+                form.render();
+            },
+            btn: ['提交', '取消'],
+            yes: function (index, layero) {//点击确定
+                //发送ajax请求
+                $.post({
+                    data: $("#UserEduForm").serialize(),
+                    dataType: "json",
+                    url: "/EduXperiencesController/addEduXper.do",
+                    success: function (rs) {
+                        if (rs.code == 200) {
+                            layer.close(index);//关闭弹窗
+                            layer.msg(rs.msg);
+                            fileOnclick('/JumpController/toEduXperiences.do', '教育经历');
+                        }
+                    }
+                })
+
+            }
+        })
+    }
+
+</script>
+<!--新增弹框-->
+<script type="text/html" id="addHtml">
+    <form class="layui-form layui-form-pane" id="UserEduForm">
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">姓名</label>
+                <div class="layui-input-block">
+                    <input type="text" readonly id="userName" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <!--影藏id-->
+            <input type="hidden" id="id" name="id">
+            <!--用户id 影藏域-->
+            <input type="hidden" id="userId" name="userId">
+            <!--操作id 影藏域-->
+            <input type="hidden" id="operatorId" name="operatorId">
+            <div class="layui-inline">
+                <label class="layui-form-label">学历</label>
+                <div class="layui-input-inline">
+                    <select name="education" id="education">
+                        <option value="请选择">请选择</option>
+                        <option value="本科">本科</option>
+                        <option value="专科">专科</option>
+                        <option value="高中">高中</option>
+                        <option value="初中">初中</option>
+                        <option value="小学">小学</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">毕业学校</label>
+                <div class="layui-input-block" style="width: 500px">
+                    <input type="text" name="graduate" id="graduate" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">入学时间</label>
+                <div class="layui-input-block">
+                    <input type="text" name="startDate" id="startDate" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">毕业时间</label>
+                <div class="layui-input-block">
+                    <input type="text" name="endDate" id="endDate" class="layui-input">
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">教育经历</label>
+                <div class="layui-input-inline" style="width: 300px">
+                    <textarea type="text" name="eduXperiences" id="eduXperiences" autocomplete="off"
+                              class="layui-textarea" style="width: 500px"></textarea>
+                </div>
+            </div>
+        </div>
+    </form>
+</script>
+</html>

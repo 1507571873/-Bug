@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.shield.mapper.AuditCkeckingMapper">
+
+    <insert id="addLeaveAudit" parameterType="com.shield.model.AuditChecking">
+        insert into t_kq_auditchecking (userId, deptId, auditType, createTime, auditIdea, businessId, busunessType)
+        values (#{userId}, #{deptId}, #{auditType}, SYSDATE(), #{auditIdea}, #{businessId}, #{busunessType})
+    </insert>
+
+    <select id="queryLeaveAuditCount" resultType="long">
+        select count(id)
+        from t_kq_leave
+        where deptId in 
+        <foreach collection="deptIds" item="deptId" separator="," close=")" open="(">
+            #{deptId}
+        </foreach>
+          and auditStatus = #{type}
+    </select>
+
+    <select id="queryLeaveAuditPage" resultType="com.shield.model.Leave">
+        select l.id,
+               l.userId,
+               l.realName,
+               l.deptId,
+               l.startTime,
+               l.endTime,
+               l.type,
+               l.leaveDays,
+               l.remark,
+               l.auditStatus,
+               d.name deptName
+        from t_kq_leave l
+                 left join t_sys_dept d on l.deptId = d.id
+        where l.deptId  in
+        <foreach collection="deptIds" item="deptId" separator="," close=")" open="(">
+            #{deptId}
+        </foreach>
+          and l.auditStatus = #{type}
+        order by l.createTime desc
+        limit #{userVo.startIndex},#{userVo.limit}
+    </select>
+
+    <select id="queryDeptChildrenId" resultType="integer" parameterType="integer">
+        select id, name
+        from (select t1.id, t1.name, if(find_in_set(pid, @pids) > 0, @pids := concat(@pids, ',', id), 0) as ischild
+              from (select id, pid, name from t_sys_dept t order by pid, id) t1,
+                   (select @pids := #{deptId}) t2) t3
+        where ischild != 0
+    </select>
+</mapper>

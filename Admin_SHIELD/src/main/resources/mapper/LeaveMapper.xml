@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.shield.mapper.LeaveMapper">
+
+    <select id="queryLeaveCount" parameterType="integer" resultType="long">
+        select count(id)
+        from t_kq_leave
+        where userId = #{userId}
+    </select>
+
+    <select id="queryLeavePage" resultType="com.shield.model.Leave">
+        select l.id,
+               l.userId,
+               l.realName,
+               l.deptId,
+               l.startTime,
+               l.endTime,
+               l.type,
+               l.leaveDays,
+               l.remark,
+               l.auditStatus,
+               d.name deptName
+        from t_kq_leave l
+                 left join t_sys_dept d on l.deptId = d.id
+        where userId = #{userId}
+        order by l.createTime desc
+        limit #{userVo.startIndex},#{userVo.limit}
+    </select>
+
+    <insert id="addLeaveData" parameterType="com.shield.model.Leave" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+        insert into t_kq_leave (deptId,userId, realName, startTime, endTime, type, startType, endType, leaveDays, remark,
+                                auditStatus, createTime, updateTime)
+        values (#{deptId},#{userId}, #{realName}, #{startTime}, #{endTime}, #{type}, #{startType}, #{endType}, #{leaveDays},
+                #{remark}, #{auditStatus}, SYSDATE(), sysdate())
+    </insert>
+
+    <select id="queryLeaveDay" parameterType="integer" resultType="com.shield.model.Leave">
+        select leaveDays from t_kq_leave where id = #{ywId}
+    </select>
+
+    <update id="updateLeaveType" >
+        update t_kq_leave set auditStatus=#{auditType},updateTime=SYSDATE() where id = #{ywId}
+    </update>
+
+</mapper>

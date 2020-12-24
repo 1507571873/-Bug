@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>不考勤日期设置</title>
+    <link rel="stylesheet" href="../../../commons/checking/date.css">
+</head>
+<body>
+
+<!-- 你的HTML代码 -->
+
+<div class="layui-container" style="padding: 15px;">
+    <div class="layui-row">
+        <div class="layui-form">
+            <div class="layui-form-item">
+                <label class="layui-form-label">选择年份</label>
+                <div class="layui-input-block">
+                    <select name="interest" lay-filter="dateSelect" id="dateSelect">
+                    </select>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="layui-row">
+        <div class="layui-col-md12">
+            <blockquote class="layui-elem-quote">不考勤日期设置
+                <button type="button" class="layui-btn" id="testListAction">保存设置</button>
+            </blockquote>
+            <div class="layui-inline" id="test-n2"></div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    layui.use(['layer', 'form', 'jquery', 'laydate'], function () {
+        var layer = layui.layer,
+            $ = layui.jquery,
+            laydate = layui.laydate,
+            form = layui.form;
+        var nowDate = new Date();
+        //获取当前年份
+        var nowYear = nowDate.getFullYear();
+        var selectHtml = "";
+        for (var i = 0; i < 5; i++) {
+            if (i == 0) {
+                selectHtml += " <option value='" + (nowYear + i) + "' selected=''>" + (nowYear + i) + "</option>"
+            } else {
+                selectHtml += " <option value='" + (nowYear + i) + "'>" + (nowYear + i) + "</option>"
+            }
+        }
+        $("#dateSelect").html(selectHtml);
+        form.render();
+
+        var laydateRender;
+        //获取下拉框的年份
+        var selectYear = $("#dateSelect").val();
+        var minDate = selectYear + "-1-1";
+        var maxDate = selectYear + "-12-31";
+        var submitDate = [];
+        //定义json
+        var data = {};
+        initDate();
+        //初始化 日历的方法
+        function initDate(){
+            //提交的数据
+            submitDate=[];
+            data={};
+            var selectYear = $("#dateSelect").val();
+            $.ajax({
+                url:"/CheckingSettingController/selectNoCheckingDate.do",
+                type:"get",
+                dataType:"json",
+                data:{
+                    year:selectYear
+                },
+                success:function (result) {
+                    for(var i=0;i<result.length;i++){
+                        var noDate=new Date(result[i]);
+                        var newDate=noDate.getFullYear()+"-"+(noDate.getMonth()+1)+"-"+noDate.getDate();
+                        data[newDate]="不考勤";
+                        submitDate.push(newDate);
+                    }
+                    $("#test-n2").html("");
+                    loding_date(new Date(minDate), data);
+                }
+            })
+        }
+
+        //下拉框的监听事件
+        form.on("select(dateSelect)", function (data) {
+            var year = data.value;
+            minDate = year + "-1-1";
+            maxDate = year + "-12-31";
+            initDate();
+
+        })
+
+
+        //日历插件调用方法
+        function loding_date(date_value, data) {
+            laydate.render({
+                elem: '#test-n2'
+                , type: 'date'
+                , theme: 'grid'
+                , min: minDate
+                , max: maxDate
+                , position: 'static'
+                , range: false
+                , value: date_value
+                , isInitValue: false
+                , calendar: false
+                , btns: false
+                , ready: function (value) {
+                    settingColor();
+                }
+                //获取数据
+                , done: function (value, date, endDate) {
+                    //拼接获取到点击的年月日
+                    var noCheckingDate = date.year + "-" + date.month + "-" + date.date;
+                    //判断data 是否等于undefind 如果等于则说明 data没添加标记 没添加则进if添加 并且给 submitDate 添加值 用于新增
+                    if (typeof(data[noCheckingDate]) == "undefined") {      // 总之就是 之前添加过 就删除
+                        //json数据赋值 
+                        data[noCheckingDate] = "不考勤";                    // 没添加过就 添加
+                        submitDate.push(noCheckingDate);                   //
+                    } else { //否则 就是之前已经添加过  再次点击就是移除
+                        delete data[noCheckingDate]; //删除data 里的
+                        var index = submitDate.indexOf(noCheckingDate) //判断当前值 在此数组中是否存在
+                        if (index > -1) {   //判断 如果大于-1则说明有 有就删除
+                            submitDate.splice(index, 1);//删除submitDate
+                        }
+                    }
+                    $("#test-n2").html("");
+                    loding_date(new Date(noCheckingDate), data);
+
+                }
+                //改变样式
+                , change: function (value, date) {
+                    //调用改变样式的方法
+                    settingColor();
+                }
+                //重要日期的标识
+                , mark: data//重要json！
+
+            });
+
+        }
+
+        //给点击的日期改变颜色
+        function settingColor() {
+            $(".layui-this").removeClass("layui-this");
+            for (var i = 0; i < submitDate.length; i++) {
+                $('td[lay-ymd="' + submitDate[i] + '"]').addClass("bg1");
+            }
+        }
+
+
+        //新增
+        $("#testListAction").on("click", function () {
+            var selectYear = $("#dateSelect").val();
+            $.ajax({
+                url:"/CheckingSettingController/addNoCheckingDate.do",
+                type:"post",
+                dataType:"json",
+                data:{
+                    year:selectYear,
+                    dates:JSON.stringify(submitDate)
+                },
+                success:function (result) {
+                    if(result.code==200){
+                        layer.msg("设置成功");
+                    }
+                }
+            })
+        })
+
+
+    })
+</script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+
+
+
+                <!--条件查询模板-->
+                <form class="layui-form">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">输入姓名</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="realName" id="realName" autocomplete="off"
+                                       class="layui-input">
+                            </div>
+                        </div>
+
+                        <div class="layui-inline" pane="">
+                            <label class="layui-form-label">状态</label>
+                            <div class="layui-input-block">
+                                <input type="radio" name="type" value="1" title="正常">
+                                <input type="radio" name="type" value="2" title="异常">
+                                <input type="radio" name="type" value="0" title="禁用" disabled="" checked="">
+                            </div>
+                        </div>
+
+                        <div class="layui-inline">
+                            <label class="layui-form-label">开始时间</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="createDate" id="createDate" autocomplete="off"
+                                       class="layui-input">
+                            </div>
+                        </div>
+
+                        <div class="layui-inline">
+                            <label class="layui-form-label">结束日期</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="endDate" id="endDate" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+
+                        <center>
+                            <button type="button" id="searchData" class="layui-btn layui-btn-warm">&nbsp;开&nbsp;始&nbsp;查&nbsp;询</button>
+                            <button type="reset" class="layui-btn layui-btn-danger">&nbsp;&nbsp;重置&nbsp;&nbsp;</button>
+                        </center>
+                    </div>
+                </form>
+                <table class="layui-hide" lay-filter="test" id="logsTable"></table>
+            </div>
+        </div>
+
+
+<script>
+    var table;
+    var form;
+    var laydate;
+    layui.use(["form","table","laydate"],function (){
+        form = layui.form;
+        table=layui.table;
+        laydate=layui.laydate;
+        form.render();
+        laydate.render({//渲染日期
+            elem: "#createDate",
+            type: "date",
+            format: "yyyy-MM-dd HH:mm:ss"
+        })
+        laydate.render({//渲染日期
+            elem: "#endDate",
+            type: "date",
+            format: "yyyy-MM-dd HH:mm:ss"
+        })
+
+        //条件查询
+        $('#searchData').on('click', function () {
+            reloadUserTable();
+        })
+
+        //条件查询的方法
+        function reloadUserTable() {
+            var realName = $('#realName').val();
+            var type = $('[name=type]:checked').val();
+            var createDate = $('#createDate').val();
+            var endDate = $('#endDate').val();
+            logs.reload({
+                where: {
+                    realName: realName,
+                    type: type,
+                    createDate: createDate,
+                    endDate: endDate,
+                },
+                page: {curr: 1}
+            })
+        }
+        //用户表
+        logs = table.render({
+            even: true //开启隔行背景
+            , elem: '#logsTable'
+            , url: '/LogController/queryLogsTable.do'
+            , cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
+            , toolbar: '#userTableHead'
+            , defaultToolbar: ['filter', 'exports', 'print', { //自定义头部工具栏右侧图标。如无需自定义，去除该参数即可
+                title: '提示',
+            }]
+            , cols: [[
+                {type: 'checkbox', fixed: 'left'  }
+                , {field: 'id', width: 80, title: 'id',  fixed: 'left', width: 100}
+                , {field: 'userId',   title: '用户Id', fixed: 'left'}
+                , {field: 'realName',   width: 80, title: '姓名', fixed: 'left', width: 100}
+                , {field: 'createTime',   title: '执行时间', width: 120}
+                , {field: 'type', title: '状态', width: 120} //minWidth：局部定义当前单元格的最小宽度，layui 2.2.1 新增
+                , {field: 'userIp',   title: 'Ip地址', width: 200}
+                , {field: 'methodName',   title: '方法名', width: 200}
+                , {field: 'className',   title: '类名', width: 200}
+                , {field: 'args',   title: '参数', width: 200}
+                , {field: 'runTime',   title: '性能', width: 200}
+                , {field: 'describeInfo',   title: '描述', width: 200}
+                , {field: 'errorInfo',   title: '错误详情', width: 200}
+            ]]
+            , page: {
+                layout: ['limit', 'count', 'prev', 'page', 'next', 'skip'] //自定义分页布局
+                , limit: 5
+                , limits: [5, 10, 15, 20]
+                , theme: '#37d5ff'
+            }
+        });
+    })
+
+
+
+</script>
+</body>
+</html>

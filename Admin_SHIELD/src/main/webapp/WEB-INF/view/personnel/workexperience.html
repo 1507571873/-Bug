@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+    <legend>简约时间线：大事记</legend>
+</fieldset>
+<form class="layui-form layui-form-pane" action="" id="addWorkExForm">
+    <input type="hidden" id="workExId" name="workExId">
+    <input type="hidden" id="userId" name="userId">
+    <input type="hidden" id="operatorId" name="operatorId">
+<ul class="layui-timeline" id="timeLine">
+    <li class="layui-timeline-item">
+        <i class="layui-icon layui-timeline-axis" onclick="timeLine1()"></i>
+        <div class="layui-timeline-content layui-text">
+            <div class="layui-timeline-title" id="timeLineData1" name="workExData1">2018年，layui 5.0 发布。并发展成为中国最受欢迎的前端UI框架（期望）</div>
+        </div>
+    </li>
+    <li class="layui-timeline-item">
+        <i class="layui-icon layui-timeline-axis" onclick="timeLine2()"></i>
+        <div class="layui-timeline-content layui-text">
+            <div class="layui-timeline-title" id="timeLineData2" name="workExData2">2017年，layui 里程碑版本 2.0 发布</div>
+        </div>
+    </li>
+    <li class="layui-timeline-item">
+        <i class="layui-icon layui-timeline-axis" onclick="timeLine3()"></i>
+        <div class="layui-timeline-content layui-text">
+            <div class="layui-timeline-title" id="timeLineData3" name="workExData3">2016年，layui 首个版本发布</div>
+        </div>
+    </li>
+    <li class="layui-timeline-item">
+        <i class="layui-icon layui-timeline-axis" onclick="timeLine4()"></i>
+        <div class="layui-timeline-content layui-text">
+            <div class="layui-timeline-title" id="timeLineData4" name="workExData4">2015年，layui 孵化</div>
+        </div>
+    </li>
+    <li class="layui-timeline-item">
+        <i class="layui-icon layui-anim layui-anim-rotate layui-anim-loop layui-timeline-axis"></i>
+        <div class="layui-timeline-content layui-text">
+            <div class="layui-timeline-title">更久前，轮子时代。维护几个独立组件：layer等</div>
+        </div>
+    </li>
+</ul>
+    <script type="text/html" id="textAreaHtml">
+        <textarea class="layui-textarea" type="hidden" id="textAreaData" name="workExData" style="width:763px;height:310px"></textarea>
+    </script>
+</form>
+<center>
+<button type="button" class="layui-btn" onclick="addWorkEx()" >保存</button>
+</center>
+<script>
+    layui.use("form",function () {
+        var organTreeObj = $.fn.zTree.getZTreeObj("organTree");
+        var selectedNodes = organTreeObj.getSelectedNodes();
+        var userId = selectedNodes[0].id.split("_")[1];
+        //次要表回显
+        $.ajax({
+            url: "/WorkExperienceController/queryWorkExById.do",
+            type: "get",
+            dataType: "json",
+            data: {
+                userId: userId
+            },
+            success: function (result) {
+                $("#workExId").val(result.data.workExId);
+                $("#userId").val(result.data.userId);
+                $("#operatorId").val(result.data.operatorId);
+                $("#timeLineData1").text(result.data.workExData1);
+                $("#timeLineData2").text(result.data.workExData2);
+                $("#timeLineData3").text(result.data.workExData3);
+                $("#timeLineData4").text(result.data.workExData4);
+            }
+        })
+    })
+    //新增
+    function addWorkEx(){
+        var workExId= $("#workExId").val();
+        var userId= $("#userId").val();
+        var operatorId= $("#operatorId").val();
+        var timeLineData1= $("#timeLineData1").text();
+        var timeLineData2= $("#timeLineData2").text();
+        var timeLineData3= $("#timeLineData3").text();
+        var timeLineData4= $("#timeLineData4").text();
+        $.post({
+            data:{
+                "workExId":workExId,
+                "userId":userId,
+                "operatorId":operatorId,
+                "workExData1":timeLineData1,
+                "workExData2":timeLineData2,
+                "workExData3":timeLineData3,
+                "workExData4":timeLineData4,
+            },
+            dataType:"json",
+            url:"/WorkExperienceController/addWorkExData.do",
+            success:function(re){
+                if (re.code==200){
+                    layer.msg(re.msg);
+                }
+
+            }
+        })
+    }
+    function timeLine1() {
+            layer.open({
+                type:1,
+                title:"工作经历",
+                content: $("#textAreaHtml").html(),
+                area:['50%','55%'],
+                btn:["提交","取消"],
+                yes:function (index,layero){
+                    $("#timeLineData1").text($("#textAreaData").val());
+                    layer.close(index);
+                },
+            })
+    }
+    function timeLine2() {
+        layer.open({
+            type:1,
+            title:"工作经历",
+            content: $("#textAreaHtml").html(),
+            area:['50%','55%'],
+            btn:["提交","取消"],
+            yes:function (index,layero){
+                $("#timeLineData2").text($("#textAreaData").val());
+                layer.close(index);
+            },
+        })
+    }
+    function timeLine3() {
+        layer.open({
+            type:1,
+            title:"工作经历",
+            content: $("#textAreaHtml").html(),
+            area:['50%','55%'],
+            btn:["提交","取消"],
+            yes:function (index,layero){
+                $("#timeLineData3").text($("#textAreaData").val());
+                layer.close(index);
+            },
+        })
+    }
+    function timeLine4() {
+        layer.open({
+            type:1,
+            title:"工作经历",
+            content: $("#textAreaHtml").html(),
+            area:['50%','55%'],
+            btn:["提交","取消"],
+            yes:function (index,layero){
+                $("#timeLineData4").text($("#textAreaData").val());
+                layer.close(index);
+            },
+        })
+    }
+
+</script>
+</body>
+</html>

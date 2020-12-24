@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div >
+    <div class="layui-col-md4">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                角色
+            </div>
+            <div class="layui-card-body">
+                <div class="ztree" id="roleZTree"></div>
+            </div>
+        </div>
+    </div>
+    <div class="layui-col-md4">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                权限
+                <button id="addPermissionToRole" type="button" class="layui-btn layui-btn-normal layui-btn-radius "  style="float: right;">给角色授予权限</button>
+            </div>
+            <div class="layui-card-body">
+                <div class="ztree" id="perTree"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="layui-col-md4">
+    <div class="layui-card">
+        <div class="layui-card-header">
+            部门
+        </div>
+        <div class="layui-card-body">
+            <div class="ztree" id="organZTree"></div>
+        </div>
+    </div>
+</div>
+
+</body>
+<script>
+    var form;
+    layui.use(['form'],function() {
+        form = layui.form;
+        //zTree设置
+        var roleSetting = {
+            view: {
+                selectedMulti: false,
+                dblClickExpand: false,
+            },
+            data: {
+                simpleData: {
+                    enable: true
+                }
+            },
+            callback: {
+                //beforeClick: beforeClick,
+                onClick:zTreeOnClick
+            }
+
+        };
+        var permissionSetting = {
+            data: {
+                simpleData: {
+                    enable: true
+                }
+            },
+            check: {
+                enable: true,
+                chkStyle: "checkbox"
+            }
+        };
+        var OrganSetting = {
+            edit: {
+                enable: true,//开启编辑模式     url失效
+                showRenameBtn: true //不显示重命名按钮
+            }
+            ,
+            check: {
+                enable: true,
+                chkStyle: "checkbox"
+            }
+
+        }
+        $.post({
+            dataType: "json",
+            url: "/RolePermissionController/queryRoleZtree.do",
+            success: function (data) {
+                zTreeObj = $.fn.zTree.init($("#roleZTree"), roleSetting, data);
+            },
+            error: function () {
+                layer.msg("系统错误");
+            }
+        })
+
+        function zTreeOnClick(event, treeId, treeNode) {
+            //获取角色id
+            var roleId = treeNode.id;
+            queryPermission(roleId);
+            //根据角色Id查询部门树
+            queryOrganTree(roleId);
+        }
+        //部门
+        function queryOrganTree(roleId){
+            $.post({
+                data:{
+                    "roleId":roleId
+                },
+                dataType: "json",
+                url: "/OrganController/queryOrganTree.do",
+                success: function (data) {
+                    zTreeObj = $.fn.zTree.init($("#organZTree"), OrganSetting, data).expandAll(true);
+                },
+                error: function () {
+                    layer.msg("系统错误");
+                }
+            })
+        }
+
+        //权限
+        function queryPermission(roleId){
+            $.ajax({
+                url:"/RolePermissionController/queryPermissionTree.do",
+                dataType:"json",
+                type:"post",
+                data:{
+                    roleId:roleId
+                },
+                success:function (result) {
+                    $.fn.zTree.init($("#perTree"), permissionSetting, result).expandAll(true);
+                }
+            })
+        }
+        //点击新增按钮 获取roleId和permissionId
+        $("#addPermissionToRole").on("click",function () {
+            //获取roleId
+            var roleZtreeObj=$.fn.zTree.getZTreeObj("roleZTree");
+            var selectNodes=roleZtreeObj.getSelectedNodes();
+            var roleId=selectNodes[0].id;
+            //获取permissionId
+            var permissionZtreeObj=$.fn.zTree.getZTreeObj("perTree");
+            var checkedNodes=permissionZtreeObj.getCheckedNodes();
+            var perArr=[];
+            for(var i=0;i<checkedNodes.length;i++){
+                perArr.push(checkedNodes[i].id)
+            }
+            //发起新增的ajax请求
+            $.post({
+                url:"/PermissionController/addRolePermission.do",
+                data:{"roleId":roleId,"permissionId":perArr},
+                dataType:"json",
+                traditional:true,
+                success:function (data) {
+                    if(data.code==400){
+                        layer.msg("角色授权限成功")
+                    }
+                },error:function () {
+                    layer.msg("角色授权限失败")
+                }
+
+            })
+
+
+        })
+    })
+
+</script>
+</html>

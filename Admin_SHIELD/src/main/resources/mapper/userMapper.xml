@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.shield.mapper.UserMapper">
+    <sql id="queryUser">
+        <where>
+            <if test="userName!=null and userName!=''">
+                and userName=#{userName}
+            </if>
+            <if test="sex!=null and sex!=0">
+                and sex=#{sex}
+            </if>
+            <if test="startDate!=null">
+                and birthday &gt;= #{startDate}
+            </if>
+            <if test="endDate!=null">
+                and birthday &lt;= #{startDate}
+            </if>
+            <if test="eduId!=null and eduId!=-1">
+                and eduId=#{eduId}
+            </if>
+        </where>
+    </sql>
+    <!--查询总条数-->
+    <select id="queryUserCount" resultType="long" parameterType="com.shield.vo.UserVo">
+        select count(*) from t_sys_user u
+        LEFT JOIN t_province p ON u.provinceCode=p.code_p
+        LEFT JOIN t_city c ON u.cityCode=c.code_c
+        LEFT JOIN t_area a ON u.areaCode=a.code_a
+        LEFT JOIN t_education e ON u.eduId=e.educationId
+        <include refid="queryUser"/>
+    </select>
+
+    <!--查询用户数据-->
+    <select id="queryUserTable" resultType="com.shield.vo.UserVo" parameterType="com.shield.vo.UserVo">
+        select u.id,u.userName,u.realName,u.phone,u.email,u.idCard,u.sex,u.birthday,u.imgUrl,e.educationName
+        e_code,p.name p_code,c.name c_code,a.name a_code,u.deptId,u.createTime,u.updateTime,d.name d_code from
+        t_sys_user u
+        LEFT JOIN t_province p ON u.provinceCode=p.code_p
+        LEFT JOIN t_city c ON u.cityCode=c.code_c
+        LEFT JOIN t_area a ON u.areaCode=a.code_a
+        LEFT JOIN t_education e ON u.eduId=e.educationId
+        LEFT JOIN t_sys_dept d ON u.deptId=d.id
+        <include refid="queryUser"/>
+        limit #{startIndex},#{limit}
+    </select>
+
+    <!--查询学历下拉框-->
+    <select id="queryEduList" resultType="map">
+        select educationId code, educationName codeName
+        from t_education
+    </select>
+
+    <!--查询省份下拉框-->
+    <select id="queryProvinceList" resultType="map">
+        select code_p code, name codeName
+        from t_province
+    </select>
+
+    <!--查询市/区的下拉框-->
+    <select id="queryCityList" resultType="map" parameterType="string">
+        select code_c code, name codeName
+        from t_city
+        where code_p = #{code_p}
+    </select>
+
+    <!--查询县的下拉框-->
+    <select id="queryAreaList" resultType="map" parameterType="string">
+        select code_a code, name codeName
+        from t_area
+        where code_c = #{code_c}
+    </select>
+
+    <!--新增数据-->
+    <insert id="addUserData" parameterType="com.shield.model.User">
+        insert into t_sys_user
+        (saltCode, password, userName, realName, phone, email, idCard, sex, birthday, imgUrl, eduId, provinceCode,
+         cityCode, areaCode, deptId, createTime, updateTime)
+        values (#{saltCode}, #{password}, #{userName}, #{realName}, #{phone}, #{email}, #{idCard}, #{sex}, #{birthday},
+                #{imgUrl}, #{eduId}, #{provinceCode}, #{cityCode}, #{areaCode}, #{deptId}, sysdate(), sysdate());
+    </insert>
+
+    <!--根据用户ID回显-->
+    <select id="queryUserById" parameterType="integer" resultType="com.shield.model.User">
+        select userName,
+               realName,
+               phone,
+               email,
+               idCard,
+               sex,
+               birthday,
+               imgUrl,
+               eduId,
+               provinceCode,
+               cityCode,
+               areaCode,
+               deptId
+        from t_sys_user
+        where id = #{id}
+    </select>
+
+    <!--修改数据-->
+    <update id="updateUserData" parameterType="com.shield.model.User">
+        update t_sys_user
+        set userName=#{userName},
+            realName=#{realName},
+            phone=#{phone},
+            email=#{email},
+            idCard=#{idCard},
+            sex=#{sex},
+            birthday=#{birthday},
+            imgUrl=#{imgUrl},
+            eduId=#{eduId},
+            provinceCode=#{provinceCode},
+            cityCode=#{cityCode},
+            areaCode=#{areaCode},
+            deptId=#{deptId},
+            updateTime=sysDate()
+        where id = #{id}
+    </update>
+
+    <!--删除-->
+    <delete id="removeUser" parameterType="integer">
+        delete
+        from t_sys_user
+        where id = #{id}
+    </delete>
+
+    <!--批量删除-->
+    <delete id="deleteBatchUserData">
+        delete from t_sys_user where id in
+        <foreach collection="array" item="ids" open="(" close=")" separator=",">
+            #{ids}
+        </foreach>
+    </delete>
+
+    <!--登录根据用户名查询-->
+    <select id="getUserByUserName" resultType="com.shield.model.User" parameterType="string">
+        select id, userName, password, saltCode, realName, deptId
+        from t_sys_user
+        where userName = #{userName}
+    </select>
+
+
+    <!--根据用户Id获取用户的权限关键字-->
+    <select id="getPermissionByUserId" parameterType="integer" resultType="string">
+        SELECT DISTINCT p.pkey
+        FROM t_sys_permission p
+                 LEFT JOIN
+             t_sys_role_permission rp ON p.id = rp.perId
+                 LEFT JOIN
+             t_sys_user_role ur on rp.roleId = ur.roleId
+        WHERE ur.userId = #{userId}
+    </select>
+
+    <!--根据用户Id获取用户的角色关键字-->
+    <select id="getRoleByUserId" parameterType="integer" resultType="string">
+        SELECT DISTINCT r.rolekey
+        FROM t_sys_role r
+                 LEFT JOIN
+             t_sys_user_role ur ON ur.roleId = r.id
+        where ur.userId = #{userId}
+    </select>
+
+    <select id="queryUserInfoById" parameterType="integer" resultType="com.shield.vo.UserVo">
+        select u.userName,u.realName,u.phone,u.email,u.idCard,u.sex,u.birthday,u.imgUrl,e.educationName
+        e_code,p.name p_code,c.name c_code,a.name a_code,u.deptId,d.name d_code from
+        t_sys_user u
+        LEFT JOIN t_province p ON u.provinceCode=p.code_p
+        LEFT JOIN t_city c ON u.cityCode=c.code_c
+        LEFT JOIN t_area a ON u.areaCode=a.code_a
+        LEFT JOIN t_education e ON u.eduId=e.educationId
+        LEFT JOIN t_sys_dept d ON u.deptId=d.id
+        where u.id=#{userId}
+    </select>
+
+    <!--<select id="queryExportUser" resultType="com.shield.utils.poi.poiBean.UserPoiModel">
+        select u.realName,
+               u.phone,
+               u.email,
+               u.idCard,
+               if(u.sex=1,'男','女') sexName,
+               u.birthday,
+               e.educationName e_code,
+               p.name p_code,
+               c.name c_code,
+               a.name a_code,
+               d.name d_code,
+               u.createTime,
+               u.updateTime
+         from  t_sys_user u
+                LEFT JOIN t_province p ON u.provinceCode=p.code_p
+                LEFT JOIN t_city c ON u.cityCode=c.code_c
+                LEFT JOIN t_area a ON u.areaCode=a.code_a
+                LEFT JOIN t_education e ON u.eduId=e.educationId
+                LEFT JOIN t_sys_dept d ON u.deptId=d.id
+    </select>-->
+    <select id="queryExportUser" resultType="com.shield.utils.poi.poiBean.UserPoiModel">
+        select
+            u.realName,
+            u.phone,
+            u.email,
+            u.idCard,
+            if(u.sex = 1,'男','女') sexName,
+            u.birthday,
+            e.educationName eduName,
+            p.name provinceName,
+            c.name cityName,
+            d.name deptName,
+            a.name areaName,
+            u.createTime,
+            u.updateTime
+        from t_sys_user u
+                 left join t_province p on u.provinceCode=p.code_p
+                 LEFT JOIN t_city c on u.cityCode = c.code_c
+                 LEFT JOIN t_area a on u.areaCode = a.code_a
+                 LEFT JOIN t_education e on u.eduId = e.educationId
+                 left join t_sys_dept d on u.deptId=d.id
+        <include refid="queryUser"/>
+    </select>
+
+</mapper>
