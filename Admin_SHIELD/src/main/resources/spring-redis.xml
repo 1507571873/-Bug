@@ -5,7 +5,7 @@
 
 	<bean class="redis.clients.jedis.JedisPool" id="jedisPool">
 		<constructor-arg name="poolConfig" ref="jedisPoolConfig"/>
-		<constructor-arg name="host" value="192.168.17.133"/>
+		<constructor-arg name="host" value="182.92.223.29"/>
 		<constructor-arg name="port" value="6379"/>
 	</bean>
 	<bean class="redis.clients.jedis.JedisPoolConfig" id="jedisPoolConfig"/>
